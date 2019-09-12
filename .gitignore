@@ -1,0 +1,8 @@
+# Mac OS
+.DS_Store
+
+mineworld.xcodeproj
+
+include
+
+lib

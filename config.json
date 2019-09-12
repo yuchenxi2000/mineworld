@@ -1,0 +1,55 @@
+{
+	"__note__" : "program reads config and settings from this file when launching",
+    "config" : {
+        "blockFilePath" : "block.json",
+        "fontset" : {
+            "texture" : "texture/font/font.png",
+            "fontvsh" : "shaders/fontvsh.glsl",
+            "fontfsh" : "shaders/fontfsh.glsl"
+        },
+        "TEXTURE_SIZE" : 16,
+        "ATLAS_SIZE_UPPER_BOUND" : 128,
+        "VISIBLE_DISTANCE" : 3,
+        "CHUNK_CACHE_DISTANCE" : 5,
+        "blockshader" : {
+            "fsh" : "shaders/fsh.glsl",
+            "vsh" : "shaders/vsh.glsl"
+        },
+        "shadowmap" : {
+            "shadowMapfsh" : "shaders/shadow.fsh",
+            "shadowMapvsh" : "shaders/shadow.vsh",
+            "ShadowMapSize" : 4096
+        },
+        "skybox" : {
+            "skyboxfsh" : "shaders/skyf.glsl",
+            "skyboxvsh" : "shaders/skyv.glsl",
+            "right" : "texture/sky/side.png",
+            "left" : "texture/sky/side.png",
+            "top" : "texture/sky/top.png",
+            "bottom" : "texture/sky/bottom.png",
+            "back" : "texture/sky/side.png",
+            "front" : "texture/sky/side0.png"
+        },
+        "crosshair" : {
+            "crossvsh" : "shaders/crossv.glsl",
+            "crossfsh" : "shaders/crossf.glsl",
+            "texturePath" : "texture/ui/cross.png"
+        }
+    },
+    "setting" : {
+        "SHOW_FPS" : false,
+        "INVERT_Y_AXIS" : false,
+        "VERTICAL_SYNC" : true,
+        "WINDOW_WIDTH" : 800,
+        "WINDOW_HEIGHT" : 600,
+        "walkSpeed" : 6.0,
+        "mouseSpeed" : 0.005,
+        "username" : "yuchenxi",
+        "FOV" : 45.0,
+        "initialPos" : {
+            "x" : 0,
+            "y" : 3,
+            "z" : 0
+        }
+    }
+}

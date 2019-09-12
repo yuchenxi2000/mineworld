@@ -1,0 +1,69 @@
+[
+    {
+		"__note__" : "simple texture pack",
+        "package" : "default",
+        "author" : "yuchenxi",
+        "block" : [
+            {
+                "name" : "grass",
+                "type" : "cube",
+                "texture" : {
+                    "upper" : "texture/block/grass/top.png",
+                    "bottom" : "texture/block/grass/bottom.png",
+                    "left" : "texture/block/grass/side.png",
+                    "right" : "texture/block/grass/side.png",
+                    "front" : "texture/block/grass/side.png",
+                    "back" : "texture/block/grass/side.png"
+                }
+            },
+            {
+                "name" : "gold",
+                "type" : "cube",
+                "texture" : {
+                    "upper" : "texture/block/gold/gold.png",
+                    "bottom" : "texture/block/gold/gold.png",
+                    "left" : "texture/block/gold/gold.png",
+                    "right" : "texture/block/gold/gold.png",
+                    "front" : "texture/block/gold/gold.png",
+                    "back" : "texture/block/gold/gold.png"
+                }
+            },
+            {
+                "name" : "diamond-ore",
+                "type" : "cube",
+                "texture" : {
+                    "upper" : "texture/block/diamond-ore/diamond-ore.png",
+                    "bottom" : "texture/block/diamond-ore/diamond-ore.png",
+                    "left" : "texture/block/diamond-ore/diamond-ore.png",
+                    "right" : "texture/block/diamond-ore/diamond-ore.png",
+                    "front" : "texture/block/diamond-ore/diamond-ore.png",
+                    "back" : "texture/block/diamond-ore/diamond-ore.png"
+                }
+            },
+            {
+                "name" : "leave",
+                "type" : "glass",
+                "texture" : {
+                    "upper" : "texture/block/leave/leave.png",
+                    "bottom" : "texture/block/leave/leave.png",
+                    "left" : "texture/block/leave/leave.png",
+                    "right" : "texture/block/leave/leave.png",
+                    "front" : "texture/block/leave/leave.png",
+                    "back" : "texture/block/leave/leave.png"
+                }
+			},
+			{
+                "name" : "log",
+                "type" : "cube",
+                "texture" : {
+                    "upper" : "texture/block/log/top.png",
+                    "bottom" : "texture/block/log/top.png",
+                    "left" : "texture/block/log/side.png",
+                    "right" : "texture/block/log/side.png",
+                    "front" : "texture/block/log/side.png",
+                    "back" : "texture/block/log/side.png"
+                }
+            }
+        ]
+    }
+]
