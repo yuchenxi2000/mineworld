@@ -13,6 +13,11 @@ int main(int argc, const char * argv[]) {
         std::cerr << "[main] failed to import settings." << std::endl;
         return -1;
     }
+    
+    // vertical sync
+    if (setting.VERTICAL_SYNC)
+        glfwSwapInterval(1);
+    
     // resize window according to user settings.
     glfwSetWindowSize(window, setting.WINDOW_WIDTH, setting.WINDOW_HEIGHT);
     glfwGetFramebufferSize(window, &setting.FRAME_BUFFER_WIDTH, &setting.FRAME_BUFFER_HEIGHT);

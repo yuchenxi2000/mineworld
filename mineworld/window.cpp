@@ -75,9 +75,5 @@ GLFWwindow * mineworld2::glfwStart() {
     glfwSetWindowSizeCallback(window, window_size_callback);
     glfwSetFramebufferSizeCallback(window, frame_buffer_size_callback);
     
-    // vertical sync
-    if (setting.VERTICAL_SYNC)
-        glfwSwapInterval(1);
-    
     return window;
 }

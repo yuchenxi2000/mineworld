@@ -1,11 +1,3 @@
-//
-//  world.hpp
-//  mineworld2
-//
-//  Created by 虞晨曦 on 2019/9/5.
-//  Copyright © 2019年 虞晨曦. All rights reserved.
-//
-
 #ifndef world_hpp
 #define world_hpp
 

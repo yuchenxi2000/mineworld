@@ -1,11 +1,3 @@
-//
-//  world.cpp
-//  mineworld2
-//
-//  Created by 虞晨曦 on 2019/9/5.
-//  Copyright © 2019年 虞晨曦. All rights reserved.
-//
-
 #include "world.hpp"
 namespace mineworld2 {
     void WorldGenerator::init() {
