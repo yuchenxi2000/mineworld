@@ -32,7 +32,6 @@ namespace mineworld2 {
     private:
         static const int MAX_TEXTURE_NUM = 16;
         
-        // 内部变量
         int CAPCITY_WIDTH, CAPCITY_HEIGHT;
         Image texture_image;
         int next_w = 0, next_h = 0;
@@ -41,7 +40,7 @@ namespace mineworld2 {
         void atlas_to_GPU();
 
     public:
-        // GL 常数
+        // GL constant
         int MAX_TEXTURE_SIZE;
         
         int TexCnt = 0;

@@ -4,7 +4,6 @@
 namespace mineworld2 {
     
     font_loc_t getFontLoc(char c) { // 16 * 8
-        //        if (c < 32) return font_loc_t(15, 7);
         int x = c & 0xF;
         int y = (c - 32) >> 4;
         return font_loc_t(x, y);

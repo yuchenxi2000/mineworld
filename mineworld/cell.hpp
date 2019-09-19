@@ -31,7 +31,8 @@ namespace mineworld2 {
             posoffset = v;
         }
         void vertexToGPU() {
-            glbuffer.insert((int)vertexarray->size(), &(*vertexarray)[0]);
+            if (vertexarray->size() != 0)
+                glbuffer.insert((int)vertexarray->size(), &(*vertexarray)[0]);
             GPU = true;
             rebuild = true;
         }

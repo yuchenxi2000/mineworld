@@ -9,7 +9,7 @@ namespace mineworld2 {
             inventory.inventory[0] = 0;
         }
         Block * block = gblockregister.blockTable[inventory.inventory[0]];
-        gboard.display(std::string("MineWorld 2.1.2 holding: " + block->name));
+        gboard.display(std::string("MineWorld 2.2.1 holding: " + block->name));
     }
     
     void Entity::prevBlock() {
@@ -18,6 +18,6 @@ namespace mineworld2 {
             inventory.inventory[0] = gblockregister.blockTable.size() - 1;
         }
         Block * block = gblockregister.blockTable[inventory.inventory[0]];
-        gboard.display(std::string("MineWorld 2.1.2 holding: " + block->name));
+        gboard.display(std::string("MineWorld 2.2.1 holding: " + block->name));
     }
 }

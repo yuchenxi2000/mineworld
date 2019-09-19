@@ -3,8 +3,9 @@
 #include <cstring>
 #include <SOIL.h>
 
-// 简单包装了 SOIL 库。
-// 用于 load, save 图片，和将图片2拷贝到图片1的指定位置，用于生成 texture atlas。
+// simple wrapper for SOIL
+// load, save image,
+// copy contents of one image to another image (creating texture atlas)
 struct Image {
     unsigned char * data;
     int width, height, channel;
@@ -27,9 +28,10 @@ struct Image {
         }
     }
     
-    // 如果设置了 force_channels，图片会强制以 force_channels 个通道数打开。
-    // 然而此时 channels 仍为图片原始的通道数，所以如果以 force_channels 模式打开要设一遍 channels
-    // 任何图片都应以 4 通道打开（alpha 透明通道）
+    // If force_channels is specified, image would be open with channels of force_channels.
+    // While value of channels is still channels of the origin image,
+    // so I set the channels variable manually.
+    // Any image should be open with 4 channels (with alpha channel)
     bool loadFromFile(const char * path, int force_channels = 0) {
         data = SOIL_load_image(path, &width, &height, &channel, force_channels);
         if (force_channels) channel = force_channels;
@@ -42,7 +44,7 @@ struct Image {
         return data[channel * (width * h + w) + ch];
     }
     
-    // 新建一张透明图片
+    // get a new blank image
     void blankImage(int w, int h, int ch) {
         this->width = w;
         this->height = h;
@@ -55,7 +57,7 @@ struct Image {
         return data == 0;
     }
     
-    // 清空
+    // delete image buffer
     void clear() {
         if (data) delete [] data;
         this->data = 0;
@@ -64,7 +66,7 @@ struct Image {
         this->channel = 0;
     }
     
-    // 将图片2拷贝到图片1的指定位置，用于生成 texture atlas。
+    // copy contents of one image to another image
     bool copy(const Image & other, int w, int h) {
         // 两张图片通道应相等
         if (channel != other.channel) return false;
@@ -74,7 +76,9 @@ struct Image {
         }
         return true;
     }
-    // 由于 SOIL 库的特性，目前只能正常保存 bmp 格式。。
+    
+    // Unforturnately, image can only be saved with bmp format.
+    // Maybe one of SOIL's features...
     bool save(const char * path) {
         return SOIL_save_image(path, SOIL_SAVE_TYPE_BMP, width, height, channel, data);
     }

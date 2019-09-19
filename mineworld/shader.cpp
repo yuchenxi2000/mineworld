@@ -24,6 +24,7 @@ namespace mineworld2 {
         for (int i = 0; i < 8; ++i) {
             auto distance = glm::dot(handler.state.lookDirection, delta[i] - positionoffset);
             // draw visible chunks
+            // Negative distance <=> chunk is behind.
             if (distance > 0 && distance < config.VISIBLE_DISTANCE * CELL_X) {
                 glUniform3fv(Attrib.posoffsetloc, 1, glm::value_ptr(positionoffset));
                 cell->glbuffer.draw();

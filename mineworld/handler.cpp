@@ -63,7 +63,6 @@ namespace mineworld2 {
         this->scrollSpeed = 5;
         this->scrollY = 0;
         
-        // 需要从存档读入初始位置
         block_loc_t bl = getBlockInChunk(setting.initialPos);
         this->chunkoffset = bl.chunkpos;
         this->position = glm::vec3(bl.blockoffset.x + 0.5, bl.blockoffset.y, bl.blockoffset.z + 0.5);

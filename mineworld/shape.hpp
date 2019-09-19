@@ -8,11 +8,11 @@
 #include "util.hpp"
 
 /*
- * 定义了一些 OpenGL 的对象
+ * some OpenGL objects
  */
 namespace mineworld2 {
     /*
-     * 三维顶点、矩形
+     * vertex, rectangle in 3 dimension
      */
     struct vertex {
         float position[3];
@@ -73,7 +73,7 @@ namespace mineworld2 {
     };
     
     /*
-     * 二维顶点、矩形
+     * vertex, rectangle in 2 dimension
      */
     struct vertex2D {
         float position[2];
@@ -125,7 +125,7 @@ namespace mineworld2 {
     };
     
     /*
-     * 顶点、矩形的平移函数
+     * move in one direction
      */
     vertex shift(const vertex & v, const ivec3 & offset);
     rect shift(const rect & r, const ivec3 & offset);
@@ -133,7 +133,7 @@ namespace mineworld2 {
     rect2D shift(const rect2D & r, float x, float y);
     
     /*
-     * 二维、三维矩形的缓冲对象
+     * vertex buffer obj for 2D, 3D vertex, rectangle
      */
     SET_ATTRIB_PTR_FUNC setrectattrib;
     typedef glBuffer<rect, setrectattrib> glRectBuffer;

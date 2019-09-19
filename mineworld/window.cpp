@@ -60,18 +60,17 @@ GLFWwindow * mineworld2::glfwStart() {
     glfwPollEvents();
     glfwSetCursorPos(window, setting.CENTER_WIDTH, setting.CENTER_WIDTH);
     
-    // 没有画任何东西时屏幕颜色
     glClearColor(0.0, 0.0, 1.0, 1.0);
     
-    // 深度缓冲
+    // enable depth buffer
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     
-    // 背面剔除
+    // cull back faces
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     
-    // 改变窗口大小时 reset WINDOW_WIDTH, WINDOW_HEIGHT
+    // reset WINDOW_WIDTH, WINDOW_HEIGHT when they are changed
     glfwSetWindowSizeCallback(window, window_size_callback);
     glfwSetFramebufferSizeCallback(window, frame_buffer_size_callback);
     

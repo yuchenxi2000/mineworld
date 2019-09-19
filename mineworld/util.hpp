@@ -45,12 +45,17 @@ namespace mineworld2 {
         }
     };
     
-    struct ivec3_hash {
+    struct ivec3_hash { // hash function for ivec3
         size_t operator () (const ivec3 & v) const {
             size_t x = v.x;
-            x = (x << 32) + v.z;
             size_t y = v.y;
+#ifdef __amd64__
+            x = (x << 32) + v.z;
             x ^= y << 16;
+#else
+            x = x + ~v.z;
+            x ^= y << 8;
+#endif
             return std::hash<size_t> () (x);
         }
     };

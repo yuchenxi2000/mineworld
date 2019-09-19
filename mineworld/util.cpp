@@ -41,16 +41,15 @@ namespace mineworld2 {
      * call exit(-1) if failed
      */
     GLuint compile(const char * vShaderCode, const char * fShaderCode) {
-        // 2. 编译着色器
         GLuint vertex, fragment;
         GLint success;
         GLchar infoLog[512];
         
-        // 顶点着色器
+        // vertex shader
         vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex, 1, &vShaderCode, NULL);
         glCompileShader(vertex);
-        // 打印编译错误（如果有的话）
+        // get and print error (if any)
         glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
         if(!success)
         {
@@ -59,11 +58,11 @@ namespace mineworld2 {
             exit(-1);
         };
         
-        // 片段着色器也类似
+        // same with fragment shader
         fragment = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragment, 1, &fShaderCode, NULL);
         glCompileShader(fragment);
-        // 打印编译错误（如果有的话）
+        // get and print error (if any)
         glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
         if(!success)
         {
@@ -72,12 +71,12 @@ namespace mineworld2 {
             exit(-1);
         };
         
-        // 着色器程序
+        // shader program
         GLuint Program = glCreateProgram();
         glAttachShader(Program, vertex);
         glAttachShader(Program, fragment);
         glLinkProgram(Program);
-        // 打印连接错误（如果有的话）
+        // get and print link error (if any)
         glGetProgramiv(Program, GL_LINK_STATUS, &success);
         if(!success)
         {
@@ -86,7 +85,7 @@ namespace mineworld2 {
             exit(-1);
         }
         
-        // 删除着色器，它们已经链接到我们的程序中了，已经不再需要了
+        // delete vertex, fragment shader, they are no longer used.
         glDetachShader(Program, vertex);
         glDetachShader(Program, fragment);
         glDeleteShader(vertex);

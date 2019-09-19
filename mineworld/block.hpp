@@ -66,14 +66,14 @@ namespace mineworld2 {
      */
     class BlockRegister {
     public:
-        std::vector<Block *> blockTable; // 方块ID -> 方块对象
-        std::map<std::string, int> map_name_id;
+        std::vector<Block *> blockTable; // block ID -> generic block
+        std::map<std::string, int> map_name_id; // block name -> block ID
         
         BlockRegister() {}
         ~BlockRegister() {}
         
-        void loadBlock(); // 从 block.json 里加载
-        int getBlockIDbyName(const std::string & name) { // 通过名字查询方块ID
+        void loadBlock(); // load from block.json
+        int getBlockIDbyName(const std::string & name) {
             auto p = map_name_id.find(name);
             if (p == map_name_id.end()) return -1;
             return p->second;

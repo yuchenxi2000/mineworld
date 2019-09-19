@@ -94,10 +94,7 @@ namespace mineworld2 {
         // calculate which block player is looking at
         void getLookAt();
         
-        //debug
         void printPosition();
-        
-        // debug
         void printLookBlock();
         
     };

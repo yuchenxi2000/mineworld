@@ -23,7 +23,7 @@ namespace mineworld2 {
     rect2D createCharRect(const font_loc_t & fl);
     
     /*
-     * 字体
+     * font
      */
     class Font {
         rect2D fontset[16 * 6];
@@ -40,8 +40,8 @@ namespace mineworld2 {
     };
     
     /*
-     * 将屏幕视为二维数组
-     * 内容有更新时重新画一遍 (resize)
+     * view the screen content as 2D array
+     * draw again if contents being updated
      */
     class Screen {
     protected:
@@ -71,8 +71,8 @@ namespace mineworld2 {
     };
     
     /*
-     * 按行打印信息
-     * 执行指令
+     * print message to screen "line by line"
+     * execute command
      */
     class Terminal : public Screen {
         std::deque<std::string> lines;
@@ -93,20 +93,20 @@ namespace mineworld2 {
             edited = true;
         }
         
-        void inputc(unsigned int c) { // 输入一个字符
+        void inputc(unsigned int c) { // input a character
             lines.rbegin()->push_back((char)c);
             edited = true;
         }
         
-        void del() { // 删除一个字符
+        void del() { // delete a character
             if (lines.rbegin()->size() > 2)
                 lines.rbegin()->pop_back();
             edited = true;
         }
         
-        void execute(); // 执行指令
+        void execute(); // execute command
         
-        void println(const std::string & str) { // 打印一行
+        void println(const std::string & str) { // print one line to screen
             lines.push_back(str);
             std::cout << str << std::endl;
             edited = true;
@@ -115,7 +115,7 @@ namespace mineworld2 {
     };
     
     /*
-     * 显示单行文字
+     * display a single line
      */
     class Board : public Screen {
         std::string displayline;
@@ -124,7 +124,7 @@ namespace mineworld2 {
         void init() {
             Screen::init();
             
-            display(std::string("MineWorld 2.1.2"));
+            display(std::string("MineWorld 2.2.1"));
         }
         void resize() {
             Screen::resize();

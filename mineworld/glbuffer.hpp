@@ -82,28 +82,18 @@ namespace mineworld2 {
     template <class sv, SET_ATTRIB_PTR_FUNC setattribptr>
     void glBuffer<sv, setattribptr>::ebo_expand(int capcity) {
         if (ebo_length < capcity) {
-            int * elem = new int[(capcity - ebo_length) * INDEX_STRIDE];
-            for (int i = ebo_length; i < capcity; ++i) {
+            int * elem = new int[capcity * INDEX_STRIDE];
+            for (int i = 0; i < capcity; ++i) {
                 for (int j = 0; j < INDEX_STRIDE; ++j) {
-                    elem[(i - ebo_length) * INDEX_STRIDE + j] = indices_template[j] + i * VERTEX_COUNT;
+                    elem[i * INDEX_STRIDE + j] = indices_template[j] + i * VERTEX_COUNT;
                 }
             }
             
             GLuint tmp_ebo;
             glGenBuffers(1, &tmp_ebo);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tmp_ebo);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, capcity * INDEX_BYTES, 0, GL_STATIC_DRAW);
-            
-            glBindBuffer(GL_COPY_READ_BUFFER, ebo);
-            glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_ELEMENT_ARRAY_BUFFER, 0, 0, ebo_length * INDEX_BYTES);
-            
-            glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, ebo_length * INDEX_BYTES, (capcity - ebo_length) * INDEX_BYTES, elem);
-            
-            glDeleteBuffers(1, &ebo);
-            
-            ebo = tmp_ebo;
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, capcity * INDEX_BYTES, elem, GL_STATIC_DRAW);
             ebo_length = capcity;
-            
             delete [] elem;
         }
     }

@@ -90,8 +90,6 @@ namespace mineworld2 {
         if (!texture_image.isNull()) {
             atlas_to_GPU();
             ++TexCnt;
-            //test
-//            texture_image.save("/Users/ycx/Desktop/ttt.bmp");
             texture_image.clear();
         }
         glGenerateMipmap(GL_TEXTURE_2D);
