@@ -5,53 +5,19 @@ namespace mineworld2 {
     Handler handler;
     
     void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-        if (action == GLFW_PRESS && handler.state.PlayingState == GameState::PLAYING) {
+        if (action == GLFW_PRESS && handler.state.playingstate == PLAYING) {
             ivec3 pos = handler.state.lookAtPos + handler.state.chunkoffset;
             int holdblock = gplayer.getHoldBlock();
             if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-                if (holdblock != 0) {
-                    switch (handler.state.lookFace) {
-                        case mineworld2::GameState::TOP:
-                            pos.y++;
-                            break;
-                            
-                        case mineworld2::GameState::BOTTOM:
-                            pos.y--;
-                            break;
-                            
-                        case mineworld2::GameState::LEFT:
-                            pos.x++;
-                            break;
-                            
-                        case mineworld2::GameState::RIGHT:
-                            pos.x--;
-                            break;
-                            
-                        case mineworld2::GameState::FRONT:
-                            pos.z++;
-                            break;
-                            
-                        case mineworld2::GameState::BACK:
-                            pos.z--;
-                            break;
-                            
-                        case mineworld2::GameState::NONE:
-                            return;
-                            
-                        default:
-                            break;
-                    }
-                    gchunk.blockUpdate(pos, holdblock);
-                }
+                gblockregister.getBlockbyID(holdblock)->rightClick(pos, handler.state.lookface);
             }else if (button == GLFW_MOUSE_BUTTON_LEFT) {
-                if (handler.state.lookFace != mineworld2::GameState::NONE)
-                    gchunk.blockUpdate(pos, 0);
+                gblockregister.getBlockbyID(holdblock)->leftClick(pos, handler.state.lookface);
             }
         }
     }
     
     void GameState::init() {
-        this->PlayingState = GameState::PLAYING;
+        this->playingstate = PLAYING;
         this->lastCommit = glfwGetTime();
         this->currentTime = lastCommit;
         this->horizontalAngle = 0.0;
@@ -96,7 +62,7 @@ namespace mineworld2 {
             printf("[FPS] %f\n", 1 / deltaTime);
         }
         
-        if (state.PlayingState == GameState::PLAYING) {
+        if (state.playingstate == PLAYING) {
             double xpos, ypos;
             glfwGetCursorPos(window, &xpos, &ypos);
             glfwSetCursorPos(window, setting.CENTER_WIDTH, setting.CENTER_HEIGHT);
@@ -177,23 +143,23 @@ namespace mineworld2 {
     void KeyCallBack(GLFWwindow * window, int key, int scancode, int action, int mods){
         
         if (key == setting.KEY_ESC && action == GLFW_RELEASE) {
-            switch (handler.state.PlayingState) {
-                case GameState::PLAYING:
-                    handler.state.PlayingState = GameState::PAUSE;
+            switch (handler.state.playingstate) {
+                case PLAYING:
+                    handler.state.playingstate = PAUSE;
                     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
                     std::cout << "[handler] game paused" << std::endl;
                     break;
                     
-                case GameState::TYPING:
-                    handler.state.PlayingState = GameState::PLAYING;
+                case TYPING:
+                    handler.state.playingstate = PLAYING;
                     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
                     std::cout << "[handler] start playing" << std::endl;
                     glfwSetCursorPos(window, setting.CENTER_WIDTH, setting.CENTER_HEIGHT);
                     glfwSetCharCallback(window, 0);
                     break;
                     
-                case GameState::PAUSE:
-                    handler.state.PlayingState = GameState::PLAYING;
+                case PAUSE:
+                    handler.state.playingstate = PLAYING;
                     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
                     std::cout << "[handler] start playing" << std::endl;
                     glfwSetCursorPos(window, setting.CENTER_WIDTH, setting.CENTER_HEIGHT);
@@ -203,10 +169,10 @@ namespace mineworld2 {
                     break;
             }
         }else if (key == setting.KEY_TYPE && action == GLFW_RELEASE) {
-            switch (handler.state.PlayingState) {
-                case GameState::PLAYING:
-                case GameState::PAUSE:
-                    handler.state.PlayingState = GameState::TYPING;
+            switch (handler.state.playingstate) {
+                case PLAYING:
+                case PAUSE:
+                    handler.state.playingstate = TYPING;
                     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
                     std::cout << "[handler] typing" << std::endl;
                     glfwSetCharCallback(window, CharCallBack);
@@ -292,9 +258,9 @@ namespace mineworld2 {
                             state.lookAtPos.z = position[2];
                             state.lookAtBlock = block;
                             if (positive) {
-                                state.lookFace = GameState::BOTTOM;
+                                state.lookface = BOTTOM;
                             }else{
-                                state.lookFace = GameState::TOP;
+                                state.lookface = TOP;
                             }
                         }
                         break;
@@ -355,9 +321,9 @@ namespace mineworld2 {
                             state.lookAtPos.z = position[2];
                             state.lookAtBlock = block;
                             if (positive) {
-                                state.lookFace = GameState::RIGHT;
+                                state.lookface = RIGHT;
                             }else{
-                                state.lookFace = GameState::LEFT;
+                                state.lookface = LEFT;
                             }
                         }
                         break;
@@ -416,9 +382,9 @@ namespace mineworld2 {
                             state.lookAtPos.z = position[2];
                             state.lookAtBlock = block;
                             if (positive) {
-                                state.lookFace = GameState::BACK;
+                                state.lookface = BACK;
                             }else{
-                                state.lookFace = GameState::FRONT;
+                                state.lookface = FRONT;
                             }
                         }
                         break;
@@ -436,7 +402,7 @@ namespace mineworld2 {
         }
         
         if (state.lookAtBlock == 0) {
-            state.lookFace = GameState::NONE;
+            state.lookface = NONE;
         }
     }
     
@@ -448,32 +414,32 @@ namespace mineworld2 {
     
     void Handler::printLookBlock() {
         const char * face;
-        switch (state.lookFace) {
-            case GameState::NONE:
+        switch (state.lookface) {
+            case NONE:
                 face = "NONE";
                 break;
                 
-            case GameState::TOP:
+            case TOP:
                 face = "TOP";
                 break;
                 
-            case GameState::BOTTOM:
+            case BOTTOM:
                 face = "BOTTOM";
                 break;
                 
-            case GameState::LEFT:
+            case LEFT:
                 face = "LEFT";
                 break;
                 
-            case GameState::RIGHT:
+            case RIGHT:
                 face = "RIGHT";
                 break;
                 
-            case GameState::FRONT:
+            case FRONT:
                 face = "FRONT";
                 break;
                 
-            case GameState::BACK:
+            case BACK:
                 face = "BACK";
                 break;
                 

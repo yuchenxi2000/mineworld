@@ -3,6 +3,47 @@
 namespace mineworld2 {
     BlockRegister gblockregister;
     
+    void Block::leftClick(const ivec3 & pos, BlockFace face) {
+        if (face != NONE) {
+            gchunk.blockUpdate(pos, 0);
+        }
+    }
+    void Block::rightClick(const ivec3 & pos, BlockFace face) {
+        ivec3 position(pos);
+        switch (face) {
+            case TOP:
+                position.y++;
+                break;
+                
+            case BOTTOM:
+                position.y--;
+                break;
+                
+            case LEFT:
+                position.x++;
+                break;
+                
+            case RIGHT:
+                position.x--;
+                break;
+                
+            case FRONT:
+                position.z++;
+                break;
+                
+            case BACK:
+                position.z--;
+                break;
+                
+            case NONE:
+                return;
+                
+            default:
+                break;
+        }
+        gchunk.blockUpdate(position, ID);
+    }
+    
     Cube::Cube(rapidjson::Value & blockinfo) : Block() {
         static const char * facesname[6] = {"upper", "bottom", "left", "right", "front", "back"};
         static const float vert[6][32] = {
@@ -102,8 +143,7 @@ namespace mineworld2 {
     }
     
     void BlockRegister::loadBlock() {
-        blockTable.push_back(new Air()); // air block
-        map_name_id[std::string("air")] = 0;
+        addBlock(new Air()); // air block
         
         FILE * fp = fopen(config.blockFilePath.c_str(), "r");
         if (!fp) {
@@ -125,11 +165,9 @@ namespace mineworld2 {
                 std::string renderType = block["type"].GetString();
                 std::string blockname = block["name"].GetString();
                 if (renderType == "cube") {
-                    map_name_id[blockname] = blockTable.size();
-                    blockTable.push_back(new Cube(block));
+                    addBlock(new Cube(block));
                 }else if (renderType == "glass") {
-                    map_name_id[blockname] = blockTable.size();
-                    blockTable.push_back(new Glass(block));
+                    addBlock(new Glass(block));
                 }else {
                     std::cerr << std::string("[block] unknown render type. skip block ") + blockname << std::endl;
                 }
@@ -139,8 +177,14 @@ namespace mineworld2 {
         gtexturemanager.finishLoadTexture();
     }
     
+    void BlockRegister::listBlock() {
+        for (auto & p : map_name_id) {
+            gterminal.println(p.first);
+        }
+    }
+    
     bool blockComplete(int block) {
-        return gblockregister.blockTable[block]->isComplete;
+        return gblockregister.getBlockbyID(block)->isComplete;
     }
     
 }

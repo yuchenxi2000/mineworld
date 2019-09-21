@@ -58,7 +58,7 @@ int main(int argc, const char * argv[]) {
         mineworld2::gskyboxshader.setuniform(view, proj);
         mineworld2::gskyboxshader.drawSkyBox();
         
-        if (mineworld2::handler.state.PlayingState == mineworld2::GameState::TYPING) {
+        if (mineworld2::handler.state.playingstate == mineworld2::TYPING) {
             mineworld2::gterminal.flush();
             mineworld2::gterminal.show();
         }else {

@@ -154,9 +154,9 @@ namespace mineworld2 {
                 println(std::string("error: invalid value. (15~40)"));
             }
         }else if (sscanf(s, "> blockname %d", &B)) {
-            try {
-                println(gblockregister.blockTable.at(B)->name);
-            } catch (const std::out_of_range & err) {
+            if (gblockregister.blockExists(B)) {
+                println(gblockregister.getBlockNamebyID(B));
+            }else {
                 println(std::string("error: block not found"));
             }
         }else if (strncmp(s, "> blockid ", 10) == 0) {
@@ -179,6 +179,8 @@ namespace mineworld2 {
             exit(0);
         }else if (strcmp(s, "> clear") == 0) {
             lines.clear();
+        }else if (strcmp(s, "> blocklist") == 0) {
+            gblockregister.listBlock();
         }else {
             println(std::string("error: unknown command."));
         }

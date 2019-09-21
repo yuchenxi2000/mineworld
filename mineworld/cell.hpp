@@ -3,13 +3,13 @@
 
 #include <iostream>
 #include <unordered_set>
+#include "types.hpp"
 #include "shader.hpp"
 #include "shape.hpp"
 #include "block.hpp"
 #include "handler.hpp"
 #include "worker.hpp"
 namespace mineworld2 {
-    const int CELL_X = 16, CELL_Y = 16, CELL_Z = 16, CELL_V = CELL_X * CELL_Y * CELL_Z;
     
     /*
      * an area of size (16, 16, 16)

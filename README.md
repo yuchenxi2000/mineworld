@@ -39,6 +39,12 @@ blockid s // 返回名字为 s 的方块 ID
 blockname id // 返回 ID 为 id 的方块名
 ```
 
+* 列出所有方块
+
+```
+blocklist // 返回方块列表
+```
+
 * 传送
 
 ```

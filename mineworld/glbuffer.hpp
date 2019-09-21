@@ -89,9 +89,7 @@ namespace mineworld2 {
                 }
             }
             
-            GLuint tmp_ebo;
-            glGenBuffers(1, &tmp_ebo);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tmp_ebo);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, capcity * INDEX_BYTES, elem, GL_STATIC_DRAW);
             ebo_length = capcity;
             delete [] elem;
@@ -125,16 +123,10 @@ namespace mineworld2 {
     template <class sv, SET_ATTRIB_PTR_FUNC setattribptr>
     void glBuffer<sv, setattribptr>::insert(int count, sv * vertices) {
         ebo_expand(count);
-        
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBindVertexArray(0);
-        
         vbo_length = count;
         
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, count * sizeof(sv), vertices, GL_STATIC_DRAW);
-        
     }
     
     template <class sv, SET_ATTRIB_PTR_FUNC setattribptr>

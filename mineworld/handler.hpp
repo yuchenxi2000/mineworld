@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "types.hpp"
 #include "util.hpp"
 #include "cell.hpp"
 #include "entity.hpp"
@@ -13,24 +14,9 @@
 
 namespace mineworld2 {
     struct GameState {
-        enum {
-            LOGIN,
-            PLAYING,
-            PAUSE,
-            TYPING
-        } PlayingState;
-        
+        PlayingState playingstate;
         // bool pressedKeys[385]; // max key num in glfw : 384
-        
-        enum {
-            NONE,
-            LEFT,
-            RIGHT,
-            TOP,
-            BOTTOM,
-            FRONT,
-            BACK
-        } lookFace;
+        BlockFace lookface;
         mineworld2::ivec3 lookAtPos;
         int lookAtBlock;
         

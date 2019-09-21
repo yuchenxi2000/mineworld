@@ -41,7 +41,7 @@ namespace worker {
             for (y = 0; y < CELL_Y; ++y) {
                 for (z = 0; z < CELL_Z; ++z) {
                     for (x = 0; x < CELL_X; ++x) {
-                        gblockregister.blockTable[(*cell)(cnt)]->addVertex(vertexarray, cell, pos);
+                        gblockregister.getBlockbyID((*cell)(cnt))->addVertex(vertexarray, cell, pos);
                         ++cnt;
                     }
                 }
