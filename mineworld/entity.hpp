@@ -3,41 +3,56 @@
 
 #include <iostream>
 #include <string>
-#include "block.hpp"
-#include "terminal.hpp"
-namespace mineworld2 {
-    class Inventory {
-    public:
-        int inventory[10];
-        int chosen;
-        
-        Inventory() {
-            memset(inventory, 0, sizeof(inventory));
-            chosen = 0;
-            //test
-            inventory[0] = 2;
-        }
-        
-        int getChosenBlock() {
-            return inventory[chosen];
-        }
-    };
+#include "hitbox.hpp"
+#include "cell.hpp"
+#include "util.hpp"
+
+namespace mineworld {
+    
     class Entity {
-        Inventory inventory;
     public:
-        int getHoldBlock() {
-            return inventory.getChosenBlock();
-        }
+        glm::vec3 lookdirection;
+        entity_pos_t entitypos;
         
-        void nextBlock();
-        void prevBlock();
+        glm::vec3 vc; // velocity
+        glm::vec3 acc; // acceleration
+        
+        double reachdistance;
+        
+        hit_pos_t blockhitpos;
+        block_loc_t hitblock;
+        
+        hit_pos_t entityhitpos;
+        Entity * hitentity;
+    public:
+        Entity();
+        Entity(const entity_pos_t & epos);
+        
+        void updateLookAt();
+        
+        void hitDebug();
     };
+    
     class Player : public Entity {
         std::string playername;
+        // test
+        int holdblock;
     public:
-        
+        Player() {
+            holdblock = 0;
+        }
+        Player(const std::string & name, const entity_pos_t & epos) : Entity(epos) {
+            holdblock = 0;
+            playername = name;
+        }
+        // test
+        void prevBlock();
+        void nextBlock();
+        int getHoldBlock() {
+            return holdblock;
+        }
     };
-    extern Player gplayer;
+    
 }
 
 #endif /* entity_hpp */

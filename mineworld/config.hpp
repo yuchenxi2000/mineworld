@@ -67,7 +67,7 @@ struct Setting {
     
     std::string username;
     
-    mineworld2::ivec3 initialPos;
+    glm::ivec3 initialPos;
 };
 
 extern Config config;

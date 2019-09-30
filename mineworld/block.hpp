@@ -7,11 +7,12 @@
 #include <rapidjson/document.h>
 #include <rapidjson/filereadstream.h>
 #include "shape.hpp"
-#include "texture.hpp"
+#include "model.hpp"
 #include "cell.hpp"
 #include "terminal.hpp"
+#include "hitbox.hpp"
 
-namespace mineworld2 {
+namespace mineworld {
     class Cell;
     
     bool blockComplete(int block);
@@ -25,17 +26,22 @@ namespace mineworld2 {
         std::string name;
         int ID;
         bool isComplete;
+        std::vector<Hitbox> vhitbox;
         
         Block() {
             isComplete = true;
         }
-        virtual void addVertex(std::vector<rect> * vertexarray, Cell * cell, ivec3 & pos) {
+        virtual void addVertex(std::vector<rect> * vertexarray, Cell * cell, glm::ivec3 & pos) {
             for (auto & r : model) {
                 vertexarray->push_back(shift(r, pos));
             }
         }
-        virtual void leftClick(const ivec3 & pos, BlockFace face);
-        virtual void rightClick(const ivec3 & pos, BlockFace face);
+//        virtual void leftClick(const glm::ivec3 & pos, Face face);
+        virtual void leftClick(const block_loc_t & pos, const hit_pos_t & hitpos, int holdblock);
+        virtual void rightClick(const block_loc_t & pos, const hit_pos_t & hitpos, int holdblock);
+//        virtual void rightClick(const glm::ivec3 & pos, Face face);
+//        virtual void rightClick(const ivec3 & pos, const hit_pos_t & hitpos, Item * holditem);
+        bool hit(const glm::vec3 & position, const glm::vec3 & direction, hit_pos_t & hitpos);
     };
     
     class Air : public Block {
@@ -44,15 +50,15 @@ namespace mineworld2 {
             isComplete = false;
             name = std::string("air");
         }
-        virtual void addVertex(std::vector<rect> * vertexarray, Cell * cell, ivec3 & pos) {}
-        virtual void leftClick(const ivec3 & pos, BlockFace face) {}
-        virtual void rightClick(const ivec3 & pos, BlockFace face) {}
+        virtual void addVertex(std::vector<rect> * vertexarray, Cell * cell, glm::ivec3 & pos) {}
+        virtual void leftClick(const block_loc_t & pos, const hit_pos_t & hitpos, int holdblock) {}
+        virtual void rightClick(const block_loc_t & pos, const hit_pos_t & hitpos, int holdblock) {}
     };
     
     class Cube : public Block {
     public:
         Cube(rapidjson::Value & blockinfo);
-        virtual void addVertex(std::vector<rect> * vertexarray, Cell * cell, ivec3 & pos);
+        virtual void addVertex(std::vector<rect> * vertexarray, Cell * cell, glm::ivec3 & pos);
     };
     
     class Glass : public Cube {
@@ -60,9 +66,29 @@ namespace mineworld2 {
         Glass(rapidjson::Value & blockinfo) : Cube(blockinfo) {
             isComplete = false;
         }
-        virtual void addVertex(std::vector<rect> * vertexarray, Cell * cell, ivec3 & pos) {
+        virtual void addVertex(std::vector<rect> * vertexarray, Cell * cell, glm::ivec3 & pos) {
             Block::addVertex(vertexarray, cell, pos);
         }
+    };
+    
+    class Slab : public Block {
+    public:
+        Slab(rapidjson::Value & blockinfo);
+    };
+    
+    class Stairs : public Block {
+    public:
+        Stairs(rapidjson::Value & blockinfo);
+    };
+    
+    class Rail : public Block {
+    public:
+        Rail(rapidjson::Value & blockinfo);
+    };
+    
+    class Grass : public Block {
+    public:
+        Grass(rapidjson::Value & blockinfo);
     };
     
     /*

@@ -10,23 +10,21 @@
 /*
  * some OpenGL objects
  */
-namespace mineworld2 {
+namespace mineworld {
     /*
      * vertex, rectangle in 3 dimension
      */
     struct vertex {
-        float position[3];
-        float uv[2];
-        float normal[3];
+        glm::vec3 position;
+        glm::vec2 uv;
+        glm::vec3 normal;
         
         vertex() {}
         vertex(const float * v) {
             memcpy(this, v, sizeof(vertex));
         }
-        vertex & shift(const ivec3 & v) {
-            position[0] += v.x;
-            position[1] += v.y;
-            position[2] += v.z;
+        vertex & shift(const glm::ivec3 & v) {
+            position += v;
             return *this;
         }
         vertex & setuv(int u, int v) {
@@ -42,19 +40,11 @@ namespace mineworld2 {
         rect(const float * v) {
             memcpy(this, v, sizeof(rect));
         }
-        rect & shift(const ivec3 & offset) {
-            v[0].position[0] += offset.x;
-            v[0].position[1] += offset.y;
-            v[0].position[2] += offset.z;
-            v[1].position[0] += offset.x;
-            v[1].position[1] += offset.y;
-            v[1].position[2] += offset.z;
-            v[2].position[0] += offset.x;
-            v[2].position[1] += offset.y;
-            v[2].position[2] += offset.z;
-            v[3].position[0] += offset.x;
-            v[3].position[1] += offset.y;
-            v[3].position[2] += offset.z;
+        rect & shift(const glm::ivec3 & offset) {
+            v[0].position += offset;
+            v[1].position += offset;
+            v[2].position += offset;
+            v[3].position += offset;
             return *this;
         }
         void out(float x) {
@@ -76,8 +66,8 @@ namespace mineworld2 {
      * vertex, rectangle in 2 dimension
      */
     struct vertex2D {
-        float position[2];
-        float uv[2];
+        glm::vec2 position;
+        glm::vec2 uv;
         vertex2D & shift(float x, float y) {
             position[0] += x;
             position[1] += y;
@@ -127,8 +117,8 @@ namespace mineworld2 {
     /*
      * move in one direction
      */
-    vertex shift(const vertex & v, const ivec3 & offset);
-    rect shift(const rect & r, const ivec3 & offset);
+    vertex shift(const vertex & v, const glm::ivec3 & offset);
+    rect shift(const rect & r, const glm::ivec3 & offset);
     vertex2D shift(const vertex2D & v, float x, float y);
     rect2D shift(const rect2D & r, float x, float y);
     

@@ -68,7 +68,7 @@ struct Image {
     
     // copy contents of one image to another image
     bool copy(const Image & other, int w, int h) {
-        // 两张图片通道应相等
+        // two channels should equal
         if (channel != other.channel) return false;
         if (w < 0 || w + other.width > width || h < 0 || h + other.height > height) return false;
         for (int r = 0; r < other.height; ++r) {

@@ -9,7 +9,7 @@
 #include "handler.hpp"
 #include "cell.hpp"
 
-namespace mineworld2 {
+namespace mineworld {
     class Cell;
     
     class Shader {

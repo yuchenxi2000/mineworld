@@ -1,28 +1,5 @@
 #include "util.hpp"
-namespace mineworld2 {
-    int ivec3_distance0(const ivec3 & a, const ivec3 & b) {
-        int x = abs(a.x - b.x);
-        int y = abs(a.y - b.y);
-        int z = abs(a.z - b.z);
-        if (x < y) x = y;
-        if (x < z)
-            return z;
-        else
-            return x;
-    }
-    
-    block_loc_t getBlockInChunk(const ivec3 & pos) {
-        block_loc_t loc;
-        loc.blockoffset.x = pos.x & 0xf;
-        loc.blockoffset.y = pos.y & 0xf;
-        loc.blockoffset.z = pos.z & 0xf;
-        loc.chunkpos = ivec3(pos) - loc.blockoffset;
-        return loc;
-    }
-    
-    int floor16(int x) {
-        return x - (x & 0xf);
-    }
+namespace mineworld {
     
     /*
      * read contents from file,

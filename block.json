@@ -63,6 +63,105 @@
                     "front" : "texture/block/log/side.png",
                     "back" : "texture/block/log/side.png"
                 }
+			},
+			{
+                "name" : "weed",
+                "type" : "grass",
+                "texture" : {
+					"cross1" : "texture/block/weed/weed.png",
+					"cross2" : "texture/block/weed/weed.png"
+                }
+			},
+			{
+                "name" : "rail",
+                "type" : "rail",
+                "texture" : {
+                    "upper" : "texture/block/rail/rail.png"
+                }
+			},
+			{
+                "name" : "acacia-stairs",
+                "type" : "stairs",
+                "texture" : {
+                    "upper" : "texture/block/acacia-stairs/acacia_planks.png",
+                    "bottom" : "texture/block/acacia-stairs/acacia_planks.png",
+                    "left" : "texture/block/acacia-stairs/left.png",
+                    "right" : "texture/block/acacia-stairs/right.png",
+                    "front" : "texture/block/acacia-stairs/acacia_planks.png",
+                    "back" : "texture/block/acacia-stairs/acacia_planks.png"
+                }
+            },
+            {
+                "name" : "stone-slab",
+                "type" : "slab",
+                "texture" : {
+                    "upper" : "texture/block/stone-slab/top.png",
+                    "bottom" : "texture/block/stone-slab/top.png",
+                    "left" : "texture/block/stone-slab/side.png",
+                    "right" : "texture/block/stone-slab/side.png",
+                    "front" : "texture/block/stone-slab/side.png",
+                    "back" : "texture/block/stone-slab/side.png"
+                }
+			},
+			{
+                "name" : "glass",
+                "type" : "glass",
+                "texture" : {
+                    "upper" : "texture/block/glass/glass.png",
+                    "bottom" : "texture/block/glass/glass.png",
+                    "left" : "texture/block/glass/glass.png",
+                    "right" : "texture/block/glass/glass.png",
+                    "front" : "texture/block/glass/glass.png",
+                    "back" : "texture/block/glass/glass.png"
+                }
+			},
+			{
+                "name" : "plank",
+                "type" : "cube",
+                "texture" : {
+                    "upper" : "texture/block/plank/plank.png",
+                    "bottom" : "texture/block/plank/plank.png",
+                    "left" : "texture/block/plank/plank.png",
+                    "right" : "texture/block/plank/plank.png",
+                    "front" : "texture/block/plank/plank.png",
+                    "back" : "texture/block/plank/plank.png"
+                }
+			},
+			{
+                "name" : "acacia_planks",
+                "type" : "cube",
+                "texture" : {
+                    "upper" : "texture/block/acacia_planks/acacia_planks.png",
+                    "bottom" : "texture/block/acacia_planks/acacia_planks.png",
+                    "left" : "texture/block/acacia_planks/acacia_planks.png",
+                    "right" : "texture/block/acacia_planks/acacia_planks.png",
+                    "front" : "texture/block/acacia_planks/acacia_planks.png",
+                    "back" : "texture/block/acacia_planks/acacia_planks.png"
+                }
+			},
+			{
+                "name" : "stone",
+                "type" : "cube",
+                "texture" : {
+                    "upper" : "texture/block/stone/stone.png",
+                    "bottom" : "texture/block/stone/stone.png",
+                    "left" : "texture/block/stone/stone.png",
+                    "right" : "texture/block/stone/stone.png",
+                    "front" : "texture/block/stone/stone.png",
+                    "back" : "texture/block/stone/stone.png"
+                }
+			},
+			{
+                "name" : "stone-bricks",
+                "type" : "cube",
+                "texture" : {
+                    "upper" : "texture/block/stone-bricks/stone_bricks.png",
+                    "bottom" : "texture/block/stone-bricks/stone_bricks.png",
+                    "left" : "texture/block/stone-bricks/stone_bricks.png",
+                    "right" : "texture/block/stone-bricks/stone_bricks.png",
+                    "front" : "texture/block/stone-bricks/stone_bricks.png",
+                    "back" : "texture/block/stone-bricks/stone_bricks.png"
+                }
             }
         ]
     }

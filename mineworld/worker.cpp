@@ -1,5 +1,5 @@
 #include "worker.hpp"
-using namespace mineworld2;
+using namespace mineworld;
 namespace worker {
     std::thread * th;
     int thread_num;
@@ -34,7 +34,7 @@ namespace worker {
                 gworldgenerator.generateWorld(cell->posoffset, cell);
             
             int cnt = 0;
-            ivec3 pos;
+            glm::ivec3 pos;
             int & x = pos.x;
             int & y = pos.y;
             int & z = pos.z;

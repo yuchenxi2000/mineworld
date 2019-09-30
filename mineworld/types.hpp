@@ -2,14 +2,14 @@
 #define types_hpp
 
 #include <iostream>
-namespace mineworld2 {
+namespace mineworld {
     const int CELL_X = 16, CELL_Y = 16, CELL_Z = 16, CELL_V = CELL_X * CELL_Y * CELL_Z;
     enum PlayingState {
         PLAYING,
         PAUSE,
         TYPING
     };
-    enum BlockFace {
+    enum Face {
         NONE,
         LEFT,
         RIGHT,

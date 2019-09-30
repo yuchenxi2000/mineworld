@@ -1,5 +1,5 @@
 #include "texture.hpp"
-namespace mineworld2 {
+namespace mineworld {
     
     GLuint create2DTexture(const std::string & path) {
         Image img(path.c_str(), 4);
@@ -21,7 +21,7 @@ namespace mineworld2 {
         return textureID;
     }
     
-    void mineworld2::TextureManager::getGLInfo() {
+    void TextureManager::getGLInfo() {
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &MAX_TEXTURE_SIZE);
         std::cout << "[texture] max atlas size " << MAX_TEXTURE_SIZE << std::endl;
         
@@ -38,7 +38,7 @@ namespace mineworld2 {
         CAPCITY_HEIGHT = MAX_TEXTURE_SIZE / config.TEXTURE_SIZE;
     }
     
-    void mineworld2::TextureManager::atlas_to_GPU() {
+    void TextureManager::atlas_to_GPU() {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, textureID[TexCnt]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -49,16 +49,16 @@ namespace mineworld2 {
     }
     
     
-    mineworld2::Textureloc mineworld2::TextureManager::loadTexture(const std::string & imagePath) {
+    texture_loc_t TextureManager::loadTexture(const std::string & imagePath) {
         Image image(imagePath.c_str(), 4);
         if (image.isNull()) {
             std::cerr << "[texture] failed to load image" << std::endl;
-            return Textureloc(-1, -1, -1);
+            return texture_loc_t(-1, -1, -1);
         }else if (image.width != config.TEXTURE_SIZE || image.height != config.TEXTURE_SIZE) {
             std::cerr << "[texture] image size should equal to config.TEXTURE_SIZE" << std::endl;
-            return Textureloc(-1, -1, -1);
+            return texture_loc_t(-1, -1, -1);
         }else if (TexCnt >= MAX_TEXTURE_NUM){
-            return Textureloc(-1, -1, -1);
+            return texture_loc_t(-1, -1, -1);
         }else{
             
             if (next_h >= CAPCITY_HEIGHT || next_w >= CAPCITY_WIDTH) {
@@ -66,7 +66,7 @@ namespace mineworld2 {
                 
                 ++TexCnt;
                 if (TexCnt >= MAX_TEXTURE_NUM)
-                    return Textureloc(-1, -1, -1);
+                    return texture_loc_t(-1, -1, -1);
                 
                 next_h = 0; next_w = 0;
             }
@@ -81,12 +81,12 @@ namespace mineworld2 {
                 next_w = 0;
                 ++next_h;
             }
-            return Textureloc(w, h, TexCnt);
+            return texture_loc_t(w, h, TexCnt);
         }
     }
     
     
-    void mineworld2::TextureManager::finishLoadTexture() {
+    void TextureManager::finishLoadTexture() {
         if (!texture_image.isNull()) {
             atlas_to_GPU();
             ++TexCnt;
@@ -95,5 +95,5 @@ namespace mineworld2 {
         glGenerateMipmap(GL_TEXTURE_2D);
     }
     
-    mineworld2::TextureManager gtexturemanager;
+    TextureManager gtexturemanager;
 }

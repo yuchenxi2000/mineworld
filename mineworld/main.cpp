@@ -2,7 +2,7 @@
 
 int main(int argc, const char * argv[]) {
     // create window & context, make context current
-    GLFWwindow * window = mineworld2::glfwStart();
+    GLFWwindow * window = mineworld::glfwStart();
     if (window == 0) {
         std::cerr << "[main] failed to open window." << std::endl;
         return -1;
@@ -23,20 +23,27 @@ int main(int argc, const char * argv[]) {
     glfwGetFramebufferSize(window, &setting.FRAME_BUFFER_WIDTH, &setting.FRAME_BUFFER_HEIGHT);
     
     // load blocks from block file specified in "config.json"
-    mineworld2::gblockregister.loadBlock();
-    mineworld2::gworldgenerator.init();
+    mineworld::gblockregister.loadBlock();
+    mineworld::gworldgenerator.init();
     
     // init shaders.
     // init skybox shader before block shader.
-    mineworld2::gskyboxshader.init();
-    mineworld2::gblockshader.init();
-    mineworld2::gcrosshairshader.init();
+    mineworld::gskyboxshader.init();
+    mineworld::gblockshader.init();
+    mineworld::gcrosshairshader.init();
     
+    // calculate initial position
+    mineworld::block_loc_t bl = setting.initialPos;
+    mineworld::entity_pos_t initialpos;
+    initialpos.chunkpos = bl.chunkpos;
+    initialpos.offset = glm::vec3(bl.offset) + glm::vec3(0.5, 3, 0.5);
+    // player "me" joined the game.
+    mineworld::Player * me = new mineworld::Player(setting.username, initialpos);
     // init handler
-    mineworld2::handler.init(window);
+    mineworld::handler.init(window, me);
     
-    mineworld2::gterminal.init();
-    mineworld2::gboard.init();
+    mineworld::gterminal.init();
+    mineworld::gboard.init();
     
     worker::workerStart(4);
     
@@ -44,27 +51,27 @@ int main(int argc, const char * argv[]) {
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glfwPollEvents();
-        mineworld2::handler.handle_input();
+        mineworld::handler.handle_input();
         
-        glm::mat4 & view = mineworld2::handler.ViewMat();
-        glm::mat4 & proj = mineworld2::handler.ProjMat();
+        glm::mat4 & view = mineworld::handler.ViewMat();
+        glm::mat4 & proj = mineworld::handler.ProjMat();
 //        glm::mat4 skyboxview = glm::mat4(glm::mat3(view));
         
-        mineworld2::gblockshader.use();
-        mineworld2::gblockshader.setuniform(view, proj);
-        mineworld2::gchunk.load();
+        mineworld::gblockshader.use();
+        mineworld::gblockshader.setuniform(view, proj);
+        mineworld::gchunk.load();
         
-        mineworld2::gskyboxshader.use();
-        mineworld2::gskyboxshader.setuniform(view, proj);
-        mineworld2::gskyboxshader.drawSkyBox();
+        mineworld::gskyboxshader.use();
+        mineworld::gskyboxshader.setuniform(view, proj);
+        mineworld::gskyboxshader.drawSkyBox();
         
-        if (mineworld2::handler.state.playingstate == mineworld2::TYPING) {
-            mineworld2::gterminal.flush();
-            mineworld2::gterminal.show();
+        if (mineworld::handler.playstate == mineworld::TYPING) {
+            mineworld::gterminal.flush();
+            mineworld::gterminal.show();
         }else {
-            mineworld2::gcrosshairshader.drawCrosshair();
-            mineworld2::gboard.flush();
-            mineworld2::gboard.show();
+            mineworld::gcrosshairshader.drawCrosshair();
+            mineworld::gboard.flush();
+            mineworld::gboard.show();
         }
         
         glfwSwapBuffers(window);

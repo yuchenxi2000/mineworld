@@ -1,12 +1,12 @@
 #include "world.hpp"
-namespace mineworld2 {
+namespace mineworld {
     void WorldGenerator::init() {
         blockID.grass = gblockregister.getBlockIDbyName(std::string("grass"));
         if (blockID.grass < 0) {
             std::cerr << "[world] cannot find blockID of grass" << std::endl;
         }
     }
-    void WorldGenerator::generateWorld(const ivec3 & chunkpos, Cell * cell) {
+    void WorldGenerator::generateWorld(const glm::ivec3 & chunkpos, Cell * cell) {
         int * blocks = cell->blockbuffer;
         memset(blocks, 0, 16 * 16 * 16 * sizeof(int));
         if (chunkpos.y == 0) {

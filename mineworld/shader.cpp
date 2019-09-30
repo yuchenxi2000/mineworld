@@ -2,7 +2,7 @@
 #include "config.hpp"
 #include "texture.hpp"
 #include "util.hpp"
-namespace mineworld2 {
+namespace mineworld {
     
     static glm::vec3 delta[8] = {
         {0, 0, 0},
@@ -16,13 +16,11 @@ namespace mineworld2 {
     };
     
     void Shader::drawCell(Cell * cell) {
-        glm::vec3 positionoffset;
-        ivec3 rchunkpos = handler.state.chunkoffset - cell->posoffset;
-        positionoffset.x = (float)rchunkpos.x + handler.state.position.x;
-        positionoffset.y = (float)rchunkpos.y + handler.state.position.y;
-        positionoffset.z = (float)rchunkpos.z + handler.state.position.z;
+        const entity_pos_t & playerpos = handler.player->entitypos;
+        glm::vec3 positionoffset = glm::vec3(playerpos.chunkpos - cell->posoffset) + playerpos.offset;
+        
         for (int i = 0; i < 8; ++i) {
-            auto distance = glm::dot(handler.state.lookDirection, delta[i] - positionoffset);
+            auto distance = glm::dot(handler.player->lookdirection, delta[i] - positionoffset);
             // draw visible chunks
             // Negative distance <=> chunk is behind.
             if (distance > 0 && distance < config.VISIBLE_DISTANCE * CELL_X) {

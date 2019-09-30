@@ -1,36 +1,36 @@
 #include "cell.hpp"
 
-namespace mineworld2 {
+namespace mineworld {
     Chunk gchunk;
     
-    void Cell::blockUpdate(const mineworld2::ivec3 & pos, int block) {
+    void Cell::blockUpdate(const glm::ivec3 & pos, int block) {
         if (GPU) {
             int ipos = pos.x + pos.z * CELL_X + pos.y * CELL_X * CELL_Z;
             blockbuffer[ipos] = block;
             gchunk.updateCell(this);
             
             if (pos.y == 0) {
-                auto p = gchunk.chunkmap.find(posoffset - ivec3(0, 16, 0));
+                auto p = gchunk.chunkmap.find(posoffset - glm::ivec3(0, 16, 0));
                 if (p != gchunk.chunkmap.end()) {
                     p->second->nearblock[0][pos.x][pos.z] = block;
                     gchunk.updateCell(p->second);
                 }
             }else if (pos.y == 15) {
-                auto p = gchunk.chunkmap.find(posoffset + ivec3(0, 16, 0));
+                auto p = gchunk.chunkmap.find(posoffset + glm::ivec3(0, 16, 0));
                 if (p != gchunk.chunkmap.end()) {
                     p->second->nearblock[1][pos.x][pos.z] = block;
                     gchunk.updateCell(p->second);
                 }
             }
             
-            if (pos.x == 15) {
-                auto p = gchunk.chunkmap.find(posoffset + ivec3(16, 0, 0));
+            if (pos.x == 0) {
+                auto p = gchunk.chunkmap.find(posoffset - glm::ivec3(16, 0, 0));
                 if (p != gchunk.chunkmap.end()) {
                     p->second->nearblock[2][pos.y][pos.z] = block;
                     gchunk.updateCell(p->second);
                 }
-            }else if (pos.x == 0) {
-                auto p = gchunk.chunkmap.find(posoffset - ivec3(16, 0, 0));
+            }else if (pos.x == 15) {
+                auto p = gchunk.chunkmap.find(posoffset + glm::ivec3(16, 0, 0));
                 if (p != gchunk.chunkmap.end()) {
                     p->second->nearblock[3][pos.y][pos.z] = block;
                     gchunk.updateCell(p->second);
@@ -38,13 +38,13 @@ namespace mineworld2 {
             }
             
             if (pos.z == 0) {
-                auto p = gchunk.chunkmap.find(posoffset - ivec3(0, 0, 16));
+                auto p = gchunk.chunkmap.find(posoffset - glm::ivec3(0, 0, 16));
                 if (p != gchunk.chunkmap.end()) {
                     p->second->nearblock[4][pos.x][pos.y] = block;
                     gchunk.updateCell(p->second);
                 }
             }else if (pos.z == 15) {
-                auto p = gchunk.chunkmap.find(posoffset + ivec3(0, 0, 16));
+                auto p = gchunk.chunkmap.find(posoffset + glm::ivec3(0, 0, 16));
                 if (p != gchunk.chunkmap.end()) {
                     p->second->nearblock[5][pos.x][pos.y] = block;
                     gchunk.updateCell(p->second);
@@ -65,16 +65,14 @@ namespace mineworld2 {
         worker::cv.notify_one();
     }
 
-    void Chunk::loadCells(ivec3 & v) {
+    void Chunk::loadCells(glm::ivec3 & v) {
         for (v.y = 0; v.y < CELL_PER_CHUNK * CELL_Y; v.y += CELL_Y) {
             auto p = chunkmap.find(v);
             if (p == chunkmap.end()) {
                 if (processingchunks.find(v) == processingchunks.end()) {
                     if (!free_list.empty()) {
                         Cell * cell = free_list.front();
-                        cell->posoffset.x = v.x;
-                        cell->posoffset.y = v.y;
-                        cell->posoffset.z = v.z;
+                        cell->posoffset = v;
                         {
                             std::lock_guard<std::mutex> lkg(worker::cv_m);
                             worker::task_queue.push_back(cell);
@@ -84,10 +82,7 @@ namespace mineworld2 {
                         processingchunks.insert(v);
                         free_list.pop_front();
                     }else {
-                        Cell * cell = new Cell();
-                        cell->posoffset.x = v.x;
-                        cell->posoffset.y = v.y;
-                        cell->posoffset.z = v.z;
+                        Cell * cell = new Cell(v);
                         {
                             std::lock_guard<std::mutex> lkg(worker::cv_m);
                             worker::task_queue.push_back(cell);
@@ -102,7 +97,7 @@ namespace mineworld2 {
     }
     
     void Chunk::load() {
-        const ivec3 & coffset = handler.state.chunkoffset;
+        const glm::ivec3 & coffset = handler.player->entitypos.chunkpos;
         for (auto p = chunkmap.begin(); p != chunkmap.end(); ++p) {
             gblockshader.drawCell(p->second);
         }
@@ -124,7 +119,7 @@ namespace mineworld2 {
                     ++p;
                 }
             }
-            ivec3 v;
+            glm::ivec3 v;
             loadCells(currentchunk);
             for (int d = 1; d <= config.VISIBLE_DISTANCE; ++d) {
                 v.x = currentchunk.x + d * CELL_X;
@@ -160,7 +155,7 @@ namespace mineworld2 {
             Cell * cell = (Cell *)ret;
             cell->vertexToGPU();
             delete cell->vertexarray;
-            ivec3 v = cell->posoffset;
+            glm::ivec3 v = cell->posoffset;
             chunkmap.insert(std::make_pair(v, cell));
             auto p = processingchunks.find(v);
             if (p != processingchunks.end()) processingchunks.erase(p);
@@ -168,14 +163,40 @@ namespace mineworld2 {
         
     }
     
-    void Chunk::blockUpdate(const ivec3 & pos, int block) {
-        block_loc_t blockloc = getBlockInChunk(pos);
+    void Chunk::blockUpdate(const glm::ivec3 & pos, int block) {
+        block_loc_t blockloc = pos;
         auto p = chunkmap.find(blockloc.chunkpos);
         if (p != chunkmap.end()) {
-            p->second->blockUpdate(blockloc.blockoffset, block);
+            p->second->blockUpdate(blockloc.offset, block);
         }else {
             gterminal.println(std::string("error: unload chunk"));
         }
+    }
+    
+    void Chunk::blockUpdate(const block_loc_t & blockpos, int block) {
+        auto p = chunkmap.find(blockpos.chunkpos);
+        if (p != chunkmap.end()) {
+            p->second->blockUpdate(blockpos.offset, block);
+        }else {
+            gterminal.println(std::string("error: unload chunk"));
+        }
+    }
+    
+    int Chunk::operator () (const glm::ivec3 & pos) {
+        block_loc_t blockloc = pos;
+        auto p = chunkmap.find(blockloc.chunkpos);
+        if (p != chunkmap.end())
+            return p->second->blockbuffer[blockloc.offset.x + blockloc.offset.z * CELL_X + blockloc.offset.y * CELL_X * CELL_Z];
+        else
+            return 0;
+    }
+    
+    int Chunk::operator () (const block_loc_t & blockloc) {
+        auto p = chunkmap.find(blockloc.chunkpos);
+        if (p != chunkmap.end())
+            return p->second->blockbuffer[blockloc.offset.x + blockloc.offset.z * CELL_X + blockloc.offset.y * CELL_X * CELL_Z];
+        else
+            return 0;
     }
 
 }

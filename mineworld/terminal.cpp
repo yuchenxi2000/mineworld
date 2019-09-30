@@ -1,7 +1,7 @@
 #include "terminal.hpp"
 #include "texture.hpp"
 #include <cmath>
-namespace mineworld2 {
+namespace mineworld {
     
     font_loc_t getFontLoc(char c) { // 16 * 8
         int x = c & 0xF;
@@ -130,7 +130,7 @@ namespace mineworld2 {
     void Terminal::execute() {
         const char * s = lines.rbegin()->c_str();
         std::cout << s << std::endl;
-        ivec3 pos;
+        glm::ivec3 pos;
         int B;
         if (strcmp(s, "> ") == 0) {
             
@@ -145,7 +145,9 @@ namespace mineworld2 {
             sprintf(buffer, "%d", b);
             println(std::string(buffer));
         }else if (sscanf(s, "> goto %d %d %d", &pos.x, &pos.y, &pos.z)) {
-            handler.setPosition(pos);
+            block_loc_t blockloc = pos;
+            handler.player->entitypos.chunkpos = blockloc.chunkpos;
+            handler.player->entitypos.offset = glm::vec3(blockloc.offset) + glm::vec3(0.5, 3, 0.5);
         }else if (sscanf(s, "> font %d", &B)) {
             if (B >= 15 && B <= 40) {
                 fontw = B;
@@ -171,9 +173,29 @@ namespace mineworld2 {
         }else if (strncmp(s, "> say ", 6) == 0) {
             println(std::string(&s[6]));
         }else if (strcmp(s, "> position") == 0) {
-            handler.printPosition();
+            entity_pos_t & playerpos = handler.player->entitypos;
+            char buffer[256];
+            sprintf(buffer, "chunk: %d %d %d", playerpos.chunkpos.x, playerpos.chunkpos.y, playerpos.chunkpos.z);
+            println(buffer);
+            sprintf(buffer, "offset: %f %f %f", playerpos.offset.x, playerpos.offset.y, playerpos.offset.z);
+            println(buffer);
         }else if (strcmp(s, "> lookat") == 0) {
-            handler.printLookBlock();
+            hit_pos_t & hitpos = handler.player->blockhitpos;
+            block_loc_t & blockloc = handler.player->hitblock;
+            char buffer[256];
+            sprintf(buffer, "block.chunkpos: %d %d %d", blockloc.chunkpos.x, blockloc.chunkpos.y, blockloc.chunkpos.z);
+            println(buffer);
+            sprintf(buffer, "block.offset: %d %d %d", blockloc.offset.x, blockloc.offset.y, blockloc.offset.z);
+            println(buffer);
+            sprintf(buffer, "hitbox num: %d", hitpos.boxnum);
+            println(buffer);
+            sprintf(buffer, "distance: %f", hitpos.distance);
+            println(buffer);
+            const char * facename[7] = {
+                "none", "left", "right", "top", "bottom", "front", "back"
+            };
+            sprintf(buffer, "face: %s", facename[hitpos.face]);
+            println(buffer);
         }else if (strcmp(s, "> exit") == 0) {
             std::cout << "[parser] exit" << std::endl;
             exit(0);

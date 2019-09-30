@@ -15,7 +15,7 @@
  * must be called from main thread
  *
  */
-namespace mineworld2 {
+namespace mineworld {
     
     typedef void SET_ATTRIB_PTR_FUNC();
     

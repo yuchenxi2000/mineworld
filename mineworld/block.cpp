@@ -1,38 +1,38 @@
 #include "block.hpp"
 
-namespace mineworld2 {
+namespace mineworld {
     BlockRegister gblockregister;
     
-    void Block::leftClick(const ivec3 & pos, BlockFace face) {
-        if (face != NONE) {
+    void Block::leftClick(const block_loc_t & pos, const hit_pos_t & hitpos, int holdblock) {
+        if (hitpos.face != NONE)
             gchunk.blockUpdate(pos, 0);
-        }
     }
-    void Block::rightClick(const ivec3 & pos, BlockFace face) {
-        ivec3 position(pos);
-        switch (face) {
+    
+    void Block::rightClick(const block_loc_t & pos, const hit_pos_t & hitpos, int holdblock) {
+        block_loc_t position(pos);
+        switch (hitpos.face) {
             case TOP:
-                position.y++;
+                position += {0, 1, 0};
                 break;
                 
             case BOTTOM:
-                position.y--;
+                position += {0, -1, 0};
                 break;
                 
             case LEFT:
-                position.x++;
+                position += {1, 0, 0};
                 break;
                 
             case RIGHT:
-                position.x--;
+                position += {-1, 0, 0};
                 break;
                 
             case FRONT:
-                position.z++;
+                position += {0, 0, 1};
                 break;
                 
             case BACK:
-                position.z--;
+                position += {0, 0, -1};
                 break;
                 
             case NONE:
@@ -41,78 +41,101 @@ namespace mineworld2 {
             default:
                 break;
         }
-        gchunk.blockUpdate(position, ID);
+        if (gchunk(position) == 0)
+            gchunk.blockUpdate(position, ID);
+    }
+    
+//    void Block::leftClick(const glm::ivec3 & pos, Face face) {
+//        if (face != NONE) {
+//            gchunk.blockUpdate(pos, 0);
+//        }
+//    }
+//    void Block::rightClick(const glm::ivec3 & pos, Face face) {
+//        glm::ivec3 position(pos);
+//        switch (face) {
+//            case TOP:
+//                position.y++;
+//                break;
+//
+//            case BOTTOM:
+//                position.y--;
+//                break;
+//
+//            case LEFT:
+//                position.x++;
+//                break;
+//
+//            case RIGHT:
+//                position.x--;
+//                break;
+//
+//            case FRONT:
+//                position.z++;
+//                break;
+//
+//            case BACK:
+//                position.z--;
+//                break;
+//
+//            case NONE:
+//                return;
+//
+//            default:
+//                break;
+//        }
+//        gchunk.blockUpdate(position, ID);
+//    }
+    
+    bool Block::hit(const glm::vec3 & position, const glm::vec3 & direction, hit_pos_t & hitpos) {
+        hit_pos_t lhp;
+        hitpos = hit_none;
+        for (auto & box : vhitbox) {
+            lhp = box.hit(position, direction);
+            if (hitpos.distance > lhp.distance) {
+                hitpos = lhp;
+            }
+        }
+        return hitpos.distance < INFINITY;
     }
     
     Cube::Cube(rapidjson::Value & blockinfo) : Block() {
-        static const char * facesname[6] = {"upper", "bottom", "left", "right", "front", "back"};
-        static const float vert[6][32] = {
-            {
-                // upper
-                0, 1, 0, 0, 0, 0, 1, 0,
-                0, 1, 1, 0, 1, 0, 1, 0,
-                1, 1, 1, 1, 1, 0, 1, 0,
-                1, 1, 0, 1, 0, 0, 1, 0,
-            },
-            {
-                // bottom
-                0, 0, 0, 0, 1, 0, -1, 0,
-                1, 0, 0, 1, 1, 0, -1, 0,
-                1, 0, 1, 1, 0, 0, -1, 0,
-                0, 0, 1, 0, 0, 0, -1, 0,
-            },
-            {
-                // left
-                0, 1, 0, 0, 0, -1, 0, 0,
-                0, 0, 0, 0, 1, -1, 0, 0,
-                0, 0, 1, 1, 1, -1, 0, 0,
-                0, 1, 1, 1, 0, -1, 0, 0,
-            },
-            {
-                // right
-                1, 0, 1, 0, 1, 1, 0, 0,
-                1, 0, 0, 1, 1, 1, 0, 0,
-                1, 1, 0, 1, 0, 1, 0, 0,
-                1, 1, 1, 0, 0, 1, 0, 0,
-            },
-            {
-                // front
-                0, 1, 1, 0, 0, 0, 0, 1,
-                0, 0, 1, 0, 1, 0, 0, 1,
-                1, 0, 1, 1, 1, 0, 0, 1,
-                1, 1, 1, 1, 0, 0, 0, 1,
-            },
-            {
-                // back
-                1, 0, 0, 0, 1, 0, 0, -1,
-                0, 0, 0, 1, 1, 0, 0, -1,
-                0, 1, 0, 1, 0, 0, 0, -1,
-                1, 1, 0, 0, 0, 0, 0, -1,
-            },
-        };
+        
+        vhitbox.push_back(Hitbox({0, 0, 0}, {1, 1, 1}, 0));
         
         isComplete = true;
         name = blockinfo["name"].GetString();
-        
-        for (int i = 0; i < 6; ++i) {
-            model.push_back(rect(vert[i]));
-        }
+
         rapidjson::Value & textureinfo = blockinfo["texture"];
-        for (int i = 0; i < 6; ++i) {
-            std::string path = textureinfo[facesname[i]].GetString();
-            Textureloc loc = gtexturemanager.loadTexture(path);
-            for (int k = 0; k < 4; ++k) {
-                model[i].v[k].uv[0] *= config.TEXTURE_SIZE;
-                model[i].v[k].uv[0] += loc.x;
-                model[i].v[k].uv[0] /= gtexturemanager.MAX_TEXTURE_SIZE;
-                model[i].v[k].uv[1] *= config.TEXTURE_SIZE;
-                model[i].v[k].uv[1] += loc.y;
-                model[i].v[k].uv[1] /= gtexturemanager.MAX_TEXTURE_SIZE;
-            }
-        }
+        std::string path;
+        texture_loc_t loc;
+        
+        path = textureinfo["upper"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectY({0, 1, 1}, {1, 1, 0}, {0, 0}, {1, 1}, loc));
+        
+        path = textureinfo["bottom"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectY({1, 0, 1}, {0, 0, 0}, {0, 0}, {1, 1}, loc));
+        
+        path = textureinfo["left"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectX({1, 0, 1}, {1, 1, 0}, {0, 0}, {1, 1}, loc));
+        
+        path = textureinfo["right"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectX({0, 0, 0}, {0, 1, 1}, {0, 0}, {1, 1}, loc));
+        
+        path = textureinfo["front"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectZ({0, 0, 1}, {1, 1, 1}, {0, 0}, {1, 1}, loc));
+        
+        path = textureinfo["back"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectZ({1, 0, 0}, {0, 1, 0}, {0, 0}, {1, 1}, loc));
+        
     }
     
-    void Cube::addVertex(std::vector<rect> * vertexarray, Cell * cell, ivec3 & pos) {
+    void Cube::addVertex(std::vector<rect> * vertexarray, Cell * cell, glm::ivec3 & pos) {
         int block;
         
         block = cell->upper(pos);
@@ -142,6 +165,121 @@ namespace mineworld2 {
         
     }
     
+    Slab::Slab(rapidjson::Value & blockinfo) : Block() {
+        
+        vhitbox.push_back(Hitbox({0, 0, 0}, {1, 0.5, 1}, 0));
+        
+        isComplete = false;
+        name = blockinfo["name"].GetString();
+        
+        rapidjson::Value & textureinfo = blockinfo["texture"];
+        
+        std::string path;
+        texture_loc_t loc;
+        
+        path = textureinfo["upper"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectY({0, 0.5, 1}, {1, 0.5, 0}, {0, 0}, {1, 1}, loc));
+        
+        path = textureinfo["bottom"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectY({1, 0, 1}, {0, 0, 0}, {0, 0}, {1, 1}, loc));
+        
+        path = textureinfo["left"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectX({1, 0, 1}, {1, 0.5, 0}, {0, 0}, {1, 0.5}, loc));
+        
+        path = textureinfo["right"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectX({0, 0, 0}, {0, 0.5, 1}, {0, 0}, {1, 0.5}, loc));
+        
+        path = textureinfo["front"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectZ({0, 0, 1}, {1, 0.5, 1}, {0, 0}, {1, 0.5}, loc));
+        
+        path = textureinfo["back"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectZ({1, 0, 0}, {0, 0.5, 0}, {0, 0}, {1, 0.5}, loc));
+    }
+    
+    Stairs::Stairs(rapidjson::Value & blockinfo) {
+        vhitbox.push_back(Hitbox({0, 0, 0}, {1, 1, 0.5}, 0));
+        vhitbox.push_back(Hitbox({0, 0, 0.5}, {1, 0.5, 1}, 1));
+        
+        isComplete = false;
+        name = blockinfo["name"].GetString();
+        
+        rapidjson::Value & textureinfo = blockinfo["texture"];
+        
+        std::string path;
+        texture_loc_t loc;
+        
+        path = textureinfo["upper"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectY({0, 0.5, 1}, {1, 0.5, 0.5}, {0, 0}, {1, 0.5}, loc));
+        model.push_back(rectY({0, 1, 0.5}, {1, 1, 0}, {0, 0.5}, {1, 1}, loc));
+        
+        path = textureinfo["bottom"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectY({1, 0, 1}, {0, 0, 0}, {0, 0}, {1, 1}, loc));
+        
+        path = textureinfo["left"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectX({1, 0, 1}, {1, 1, 0}, {0, 0}, {1, 1}, loc));
+        
+        path = textureinfo["right"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectX({0, 0, 0}, {0, 1, 1}, {0, 0}, {1, 1}, loc));
+        
+        path = textureinfo["front"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectZ({0, 0, 1}, {1, 0.5, 1}, {0, 0}, {1, 0.5}, loc));
+        model.push_back(rectZ({0, 0.5, 0.5}, {1, 1, 0.5}, {0, 0.5}, {1, 1}, loc));
+        
+        path = textureinfo["back"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectZ({1, 0, 0}, {0, 1, 0}, {0, 0}, {1, 1}, loc));
+    }
+    
+    Rail::Rail(rapidjson::Value & blockinfo) {
+        vhitbox.push_back(Hitbox({0, 0, 0}, {1, 0.125, 1}, 0));
+        
+        isComplete = false;
+        name = blockinfo["name"].GetString();
+        
+        rapidjson::Value & textureinfo = blockinfo["texture"];
+        
+        std::string path;
+        texture_loc_t loc;
+        
+        path = textureinfo["upper"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectY({0, 0.0625, 1}, {1, 0.0625, 0}, {0, 0}, {1, 1}, loc));
+        model.push_back(rectY({1, 0.0625, 1}, {0, 0.0625, 0}, {1, 0}, {0, 1}, loc));
+    }
+    
+    Grass::Grass(rapidjson::Value & blockinfo) {
+        vhitbox.push_back(Hitbox({0, 0, 0}, {1, 0.7, 1}, 0));
+        
+        isComplete = false;
+        name = blockinfo["name"].GetString();
+        
+        rapidjson::Value & textureinfo = blockinfo["texture"];
+        
+        std::string path;
+        texture_loc_t loc;
+        
+        path = textureinfo["cross1"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectP({0, 0, 1}, {1, 0, 0}, {1, 1, 0}, {0, 1, 1}, {0, 0}, {1, 1}, loc));
+        model.push_back(rectP({1, 0, 0}, {0, 0, 1}, {0, 1, 1}, {1, 1, 0}, {0, 0}, {1, 1}, loc));
+        
+        path = textureinfo["cross2"].GetString();
+        loc = gtexturemanager.loadTexture(path);
+        model.push_back(rectP({1, 0, 1}, {0, 0, 0}, {0, 1, 0}, {1, 1, 1}, {0, 0}, {1, 1}, loc));
+        model.push_back(rectP({0, 0, 0}, {1, 0, 1}, {1, 1, 1}, {0, 1, 0}, {0, 0}, {1, 1}, loc));
+    }
+    
     void BlockRegister::loadBlock() {
         addBlock(new Air()); // air block
         
@@ -168,6 +306,14 @@ namespace mineworld2 {
                     addBlock(new Cube(block));
                 }else if (renderType == "glass") {
                     addBlock(new Glass(block));
+                }else if (renderType == "slab") {
+                    addBlock(new Slab(block));
+                }else if (renderType == "stairs") {
+                    addBlock(new Stairs(block));
+                }else if (renderType == "rail") {
+                    addBlock(new Rail(block));
+                }else if (renderType == "grass") {
+                    addBlock(new Grass(block));
                 }else {
                     std::cerr << std::string("[block] unknown render type. skip block ") + blockname << std::endl;
                 }

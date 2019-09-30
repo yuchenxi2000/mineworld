@@ -1,10 +1,10 @@
 #include "shape.hpp"
-namespace mineworld2 {
-    vertex shift(const vertex & v, const ivec3 & offset) {
+namespace mineworld {
+    vertex shift(const vertex & v, const glm::ivec3 & offset) {
         return vertex(v).shift(offset);
     }
     
-    rect shift(const rect & r, const ivec3 & offset) {
+    rect shift(const rect & r, const glm::ivec3 & offset) {
         return rect(r).shift(offset);
     }
     

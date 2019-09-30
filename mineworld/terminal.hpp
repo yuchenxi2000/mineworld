@@ -13,7 +13,7 @@
 #include "cell.hpp"
 #include "handler.hpp"
 #include "block.hpp"
-namespace mineworld2 {
+namespace mineworld {
     struct font_loc_t {
         int x, y;
         font_loc_t(int x, int y) : x(x), y(y) {}
@@ -124,7 +124,7 @@ namespace mineworld2 {
         void init() {
             Screen::init();
             
-            display(std::string("MineWorld 2.2.1"));
+            display(std::string("MineWorld 3.0.0"));
         }
         void resize() {
             Screen::resize();

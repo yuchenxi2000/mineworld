@@ -8,7 +8,7 @@
 /*
  * create window & context, make context current
  */
-namespace mineworld2 {
+namespace mineworld {
     GLFWwindow * glfwStart();
 }
 #endif /* window_hpp */

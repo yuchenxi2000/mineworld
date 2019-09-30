@@ -8,7 +8,7 @@
             "fontfsh" : "shaders/fontfsh.glsl"
         },
         "TEXTURE_SIZE" : 16,
-        "ATLAS_SIZE_UPPER_BOUND" : 128,
+        "ATLAS_SIZE_UPPER_BOUND" : 2048,
         "VISIBLE_DISTANCE" : 3,
         "CHUNK_CACHE_DISTANCE" : 5,
         "blockshader" : {
@@ -48,7 +48,7 @@
         "FOV" : 45.0,
         "initialPos" : {
             "x" : 0,
-            "y" : 3,
+            "y" : 0,
             "z" : 0
         }
     }

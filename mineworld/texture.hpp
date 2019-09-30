@@ -7,14 +7,15 @@
 #include <GLFW/glfw3.h>
 #include "image.hpp"
 
-namespace mineworld2 {
+namespace mineworld {
     /*
      * the location of a texture in texture atlas
      */
-    struct Textureloc {
+    struct texture_loc_t {
         int x, y;
         GLuint TexID;
-        Textureloc(int x, int y, GLuint id) : x(x), y(y), TexID(id) {}
+        texture_loc_t() {}
+        texture_loc_t(int x, int y, GLuint id) : x(x), y(y), TexID(id) {}
     };
     
     /*
@@ -63,7 +64,7 @@ namespace mineworld2 {
             glDeleteTextures(TexCnt, textureID);
         }
         
-        Textureloc loadTexture(const std::string & imagePath);
+        texture_loc_t loadTexture(const std::string & imagePath);
         void finishLoadTexture();
         
     };
