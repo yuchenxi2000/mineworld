@@ -30,18 +30,9 @@ namespace mineworld {
         void setoffset(const glm::ivec3 & v) {
             posoffset = v;
         }
-        void vertexToGPU() {
-            if (vertexarray->size() != 0)
-                glbuffer.insert((int)vertexarray->size(), &(*vertexarray)[0]);
-            GPU = true;
-            rebuild = true;
-        }
+        void vertexToGPU();
         void blockUpdate(const glm::ivec3 & pos, int block);
-        void clear() {
-            glbuffer.clear();
-            GPU = false;
-            rebuild = false;
-        }
+        void clear();
         int operator () (int x, int y, int z) {
             return blockbuffer[x + (z << 4) + (y << 8)];
         }

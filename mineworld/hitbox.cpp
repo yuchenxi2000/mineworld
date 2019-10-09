@@ -7,7 +7,6 @@ namespace mineworld {
     };
     
     hit_pos_t Hitbox::hit(const glm::vec3 & position, const glm::vec3 & direction) {
-        // TODO
         // -z : front; +z : back
         // +x : right; -x : left
         // +y : top; -y : bottom

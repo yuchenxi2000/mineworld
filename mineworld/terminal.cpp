@@ -152,6 +152,7 @@ namespace mineworld {
             if (B >= 15 && B <= 40) {
                 fontw = B;
                 fonth = B * 2;
+                edited = true;
             }else {
                 println(std::string("error: invalid value. (15~40)"));
             }
@@ -197,12 +198,17 @@ namespace mineworld {
             sprintf(buffer, "face: %s", facename[hitpos.face]);
             println(buffer);
         }else if (strcmp(s, "> exit") == 0) {
-            std::cout << "[parser] exit" << std::endl;
+            std::cout << "[terminal] exit" << std::endl;
             exit(0);
         }else if (strcmp(s, "> clear") == 0) {
             lines.clear();
         }else if (strcmp(s, "> blocklist") == 0) {
             gblockregister.listBlock();
+        }else if (strcmp(s, "> version") == 0) {
+            println(std::string(MW_VERSION));
+        }else if (strcmp(s, "> license") == 0) {
+            println(std::string("Copyright (c) 2019 Chenxi Yu"));
+            println(std::string("Licensed under MIT License"));
         }else {
             println(std::string("error: unknown command."));
         }

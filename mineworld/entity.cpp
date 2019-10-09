@@ -182,23 +182,10 @@ namespace mineworld {
         
     }
     
-    void Entity::hitDebug() {
-        char buffer[256];
-        glm::ivec3 hb = hitblock.chunkpos + hitblock.offset;
-        sprintf(buffer, "hitblock: %d %d %d", hb.x, hb.y, hb.z);
-        gterminal.println(buffer);
-        
-        const char * facename[7] = {
-            "NONE", "LEFT", "RIGHT", "TOP", "BOTTOM", "FRONT", "BACK"
-        };
-        sprintf(buffer, "hitpos: d%f f%s", blockhitpos.distance, facename[blockhitpos.face]);
-        gterminal.println(buffer);
-    }
-    
     void Player::prevBlock() {
         if (holdblock > 0) {
             holdblock--;
-            gboard.display(std::string("MineWorld 3.0.0 holding: ") + gblockregister.getBlockNamebyID(holdblock));
+            gboard.display(std::string(SCREEN_DISPLAY) + gblockregister.getBlockNamebyID(holdblock));
         }
     }
     
@@ -206,7 +193,7 @@ namespace mineworld {
         int maxblock = gblockregister.blockTable.size();
         if (holdblock < maxblock - 1) {
             holdblock++;
-            gboard.display(std::string("MineWorld 3.0.0 holding: ") + gblockregister.getBlockNamebyID(holdblock));
+            gboard.display(std::string(SCREEN_DISPLAY) + gblockregister.getBlockNamebyID(holdblock));
         }
     }
 }

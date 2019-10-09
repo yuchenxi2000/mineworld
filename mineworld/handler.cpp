@@ -4,6 +4,8 @@
 namespace mineworld {
     Handler handler;
     
+    bool keypressed[349]; // max key num in glfw : 348
+    
     void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
         if (action == GLFW_PRESS && handler.playstate == PLAYING) {
             auto & blockloc = handler.player->hitblock;
@@ -24,7 +26,6 @@ namespace mineworld {
         glfwSetMouseButtonCallback(window, mouse_button_callback);
         // TODO
 //        glfwSetScrollCallback(window, scroll_callback);
-        // TODO: initial position
         this->player = player;
         playstate = PLAYING;
         
@@ -63,22 +64,22 @@ namespace mineworld {
             glm::vec3 right = glm::vec3(-cos(horizontalAngle), 0, sin(horizontalAngle));
             glm::vec3 up(0.0f, 1.0f, 0.0f);
             glm::vec3 forward(sin(horizontalAngle), 0, cos(horizontalAngle));
-            if (glfwGetKey(window, setting.KEY_FORWARD)) {
+            if (keypressed[GLFW_KEY_W]) {
                 player->entitypos += runSpeed * timer.deltaTime * forward;
             }
-            if (glfwGetKey(window, setting.KEY_BACKWARD)) {
+            if (keypressed[GLFW_KEY_S]) {
                 player->entitypos -= runSpeed * timer.deltaTime * forward;
             }
-            if (glfwGetKey(window, setting.KEY_LEFT)) {
+            if (keypressed[GLFW_KEY_A]) {
                 player->entitypos -= runSpeed * timer.deltaTime * right;
             }
-            if (glfwGetKey(window, setting.KEY_RIGHT)) {
+            if (keypressed[GLFW_KEY_D]) {
                 player->entitypos += runSpeed * timer.deltaTime * right;
             }
-            if (glfwGetKey(window, setting.KEY_UP)) {
+            if (keypressed[GLFW_KEY_SPACE]) {
                 player->entitypos += runSpeed * timer.deltaTime * up;
             }
-            if (glfwGetKey(window, setting.KEY_DOWN)) {
+            if (keypressed[GLFW_KEY_LEFT_SHIFT]) {
                 player->entitypos -= runSpeed * timer.deltaTime * up;
             }
             player->lookdirection = glm::vec3(
@@ -98,59 +99,89 @@ namespace mineworld {
     }
     
     void KeyCallBack(GLFWwindow * window, int key, int scancode, int action, int mods){
-        
-        if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
-            handler.player->prevBlock();
-        }else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
-            handler.player->nextBlock();
-        }
-        
-        if (key == setting.KEY_ESC && action == GLFW_RELEASE) {
-            switch (handler.playstate) {
-                case PLAYING:
-                    handler.playstate = PAUSE;
-                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-                    std::cout << "[handler] game paused" << std::endl;
+        if (action == GLFW_PRESS) {
+            if (key >= 0)
+                keypressed[key] = 1;
+        }else if (action == GLFW_RELEASE) {
+            if (key >= 0)
+                keypressed[key] = 0;
+            switch (key) {
+                case GLFW_KEY_LEFT:
+                {
+                    handler.player->prevBlock();
                     break;
-                    
-                case TYPING:
-                    handler.playstate = PLAYING;
-                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-                    std::cout << "[handler] start playing" << std::endl;
-                    glfwSetCursorPos(window, setting.CENTER_WIDTH, setting.CENTER_HEIGHT);
-                    glfwSetCharCallback(window, 0);
+                }
+                
+                case GLFW_KEY_RIGHT:
+                {
+                    handler.player->nextBlock();
                     break;
-                    
-                case PAUSE:
-                    handler.playstate = PLAYING;
-                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-                    std::cout << "[handler] start playing" << std::endl;
-                    glfwSetCursorPos(window, setting.CENTER_WIDTH, setting.CENTER_HEIGHT);
+                }
+                
+                case GLFW_KEY_ESCAPE:
+                {
+                    switch (handler.playstate) {
+                        case PLAYING:
+                            handler.playstate = PAUSE;
+                            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                            std::cout << "[handler] game paused" << std::endl;
+                            break;
+                            
+                        case TYPING:
+                            handler.playstate = PLAYING;
+                            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                            std::cout << "[handler] start playing" << std::endl;
+                            glfwSetCursorPos(window, setting.CENTER_WIDTH, setting.CENTER_HEIGHT);
+                            glfwSetCharCallback(window, 0);
+                            break;
+                            
+                        case PAUSE:
+                            handler.playstate = PLAYING;
+                            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                            std::cout << "[handler] start playing" << std::endl;
+                            glfwSetCursorPos(window, setting.CENTER_WIDTH, setting.CENTER_HEIGHT);
+                            break;
+                            
+                        default:
+                            break;
+                    }
                     break;
+                }
+                
+                case GLFW_KEY_T:
+                {
+                    switch (handler.playstate) {
+                        case PLAYING:
+                        case PAUSE:
+                            handler.playstate = TYPING;
+                            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                            glfwSetCharCallback(window, CharCallBack);
+                            std::cout << "[handler] typing" << std::endl;
+                            break;
+                            
+                        default:
+                            break;
+                    }
+                    break;
+                }
+                
+                case GLFW_KEY_ENTER:
+                {
+                    gterminal.execute();
+                    break;
+                }
+                
+                case GLFW_KEY_BACKSPACE:
+                {
+                    gterminal.del();
+                    break;
+                }
                     
                 default:
                     break;
-            }
-        }else if (key == setting.KEY_TYPE && action == GLFW_RELEASE) {
-            switch (handler.playstate) {
-                case PLAYING:
-                case PAUSE:
-                    handler.playstate = TYPING;
-                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-                    std::cout << "[handler] typing" << std::endl;
-                    glfwSetCharCallback(window, CharCallBack);
-                    break;
-                    
-                default:
-                    break;
-            }
-        }else if (key == GLFW_KEY_ENTER && action == GLFW_RELEASE) {
-            gterminal.execute();
-        }else if (key == GLFW_KEY_BACKSPACE && action == GLFW_RELEASE) {
-            gterminal.del();
-        }
-        
-    }
+            } /* end switch */
+        } /* end if */
+    } /* KeyCallBack */
     
     void CharCallBack(GLFWwindow * window, unsigned int c) {
         gterminal.inputc(c);
@@ -165,253 +196,6 @@ namespace mineworld {
 //            mineworld2::gplayer.prevBlock();
 //            handler.state.scrollY = handler.state.scrollSpeed;
 //        }
-//    }
-    
-//    void Handler::getLookAt() {
-//        state.lookAtBlock = 0;
-//
-//        double distance = DBL_MAX;
-//        float horizontalAngle = state.horizontalAngle;
-//        float verticalAngle = state.verticalAngle;
-//
-//        double x, y, z, t, xx, yy, zz;
-//        xx = state.position.x;
-//        yy = state.position.y;
-//        zz = state.position.z;
-//
-//        // test y axis
-//        int j = floor(yy);
-//        bool positive = (verticalAngle > 0.0);
-//        if (positive) {
-//            j++;
-//        }
-//
-//        if (0) {
-//            //verticalAngle < 0.1 || verticalAngle > -0.1
-//        }else{
-//            while (true) {
-//                t = (double(j) - yy) / state.lookDirection.y;
-//
-//                if (t >= 10.0 || t <= -10.0) {
-//                    break;
-//                }else{
-//                    x = xx + state.lookDirection.x * t;
-//                    z = zz + state.lookDirection.z * t;
-//
-//                    int position[3];
-//                    position[0] = floor(x);
-//                    if (positive) {
-//                        position[1] = j;
-//                    }else{
-//                        position[1] = j - 1;
-//                    }
-//
-//                    position[2] = floor(z);
-//
-//                    int block = gchunk(position[0] + state.chunkoffset.x, position[1] + state.chunkoffset.y, position[2] + state.chunkoffset.z);
-//
-//                    if (block != 0) {
-//                        if (t < 0.0) {
-//                            t = -t;
-//                        }
-//                        if (t < distance) {
-//                            distance = t;
-//                            state.lookAtPos.x = position[0];
-//                            state.lookAtPos.y = position[1];
-//                            state.lookAtPos.z = position[2];
-//                            state.lookAtBlock = block;
-//                            if (positive) {
-//                                state.lookface = BOTTOM;
-//                            }else{
-//                                state.lookface = TOP;
-//                            }
-//                        }
-//                        break;
-//                    }
-//
-//                    if (positive) {
-//                        j++;
-//                    }else{
-//                        j--;
-//                    }
-//                }
-//
-//            }
-//
-//        }
-//
-//
-//
-//        // test x axis
-//        j = floor(xx);
-//        positive = (sin(horizontalAngle) > 0.0);
-//        if (positive) {
-//            j++;
-//        }
-//
-//        if (0) {
-//            //sin(horizontalAngle) > 0.9 || sin(horizontalAngle) < -0.9
-//        }else{
-//            while (true) {
-//                t = (double(j) - xx) / state.lookDirection.x;
-//
-//                if (t >= 10.0 || t <= -10.0) {
-//                    break;
-//                }else{
-//                    y = yy + state.lookDirection.y * t;
-//                    z = zz + state.lookDirection.z * t;
-//
-//                    int position[3];
-//                    if (positive) {
-//                        position[0] = j;
-//                    }else{
-//                        position[0] = j - 1;
-//                    }
-//
-//                    position[1] = floor(y);
-//                    position[2] = floor(z);
-//
-//                    int block = gchunk(position[0] + state.chunkoffset.x, position[1] + state.chunkoffset.y, position[2] + state.chunkoffset.z);
-//
-//                    if (block != 0) {
-//                        if (t < 0.0) {
-//                            t = -t;
-//                        }
-//                        if (t < distance) {
-//                            distance = t;
-//                            state.lookAtPos.x = position[0];
-//                            state.lookAtPos.y = position[1];
-//                            state.lookAtPos.z = position[2];
-//                            state.lookAtBlock = block;
-//                            if (positive) {
-//                                state.lookface = RIGHT;
-//                            }else{
-//                                state.lookface = LEFT;
-//                            }
-//                        }
-//                        break;
-//                    }
-//
-//                    if (positive) {
-//                        j++;
-//                    }else{
-//                        j--;
-//                    }
-//                }
-//
-//            }
-//
-//        }
-//
-//
-//        // test z axis
-//        j = floor(zz);
-//        positive = (cos(horizontalAngle) > 0.0);
-//        if (positive) {
-//            j++;
-//        }
-//
-//        if (0) {
-//            //cos(horizontalAngle) > 0.9 || cos(horizontalAngle) < -0.9
-//        }else{
-//            while (true) {
-//                t = (double(j) - zz) / state.lookDirection.z;
-//
-//                if (t >= 10.0 || t <= -10.0) {
-//                    break;
-//                }else{
-//                    x = xx + state.lookDirection.x * t;
-//                    y = yy + state.lookDirection.y * t;
-//
-//                    int position[3];
-//                    position[0] = floor(x);
-//                    position[1] = floor(y);
-//                    if (positive) {
-//                        position[2] = j;
-//                    }else{
-//                        position[2] = j - 1;
-//                    }
-//
-//                    int block = gchunk(position[0] + state.chunkoffset.x, position[1] + state.chunkoffset.y, position[2] + state.chunkoffset.z);
-//
-//                    if (block != 0) {
-//                        if (t < 0.0) {
-//                            t = -t;
-//                        }
-//                        if (t < distance) {
-//                            distance = t;
-//                            state.lookAtPos.x = position[0];
-//                            state.lookAtPos.y = position[1];
-//                            state.lookAtPos.z = position[2];
-//                            state.lookAtBlock = block;
-//                            if (positive) {
-//                                state.lookface = BACK;
-//                            }else{
-//                                state.lookface = FRONT;
-//                            }
-//                        }
-//                        break;
-//                    }
-//
-//                    if (positive) {
-//                        j++;
-//                    }else{
-//                        j--;
-//                    }
-//                }
-//
-//            }
-//
-//        }
-//
-//        if (state.lookAtBlock == 0) {
-//            state.lookface = NONE;
-//        }
-//    }
-//
-//    void Handler::printPosition() {
-//        char buffer[64];
-//        sprintf(buffer, "(%d, %d, %d)", (int)state.position.x + state.chunkoffset.x, (int)state.position.y + state.chunkoffset.y, (int)state.position.z + state.chunkoffset.z);
-//        gterminal.println(std::string(buffer));
-//    }
-//
-//    void Handler::printLookBlock() {
-//        const char * face;
-//        switch (state.lookface) {
-//            case NONE:
-//                face = "NONE";
-//                break;
-//
-//            case TOP:
-//                face = "TOP";
-//                break;
-//
-//            case BOTTOM:
-//                face = "BOTTOM";
-//                break;
-//
-//            case LEFT:
-//                face = "LEFT";
-//                break;
-//
-//            case RIGHT:
-//                face = "RIGHT";
-//                break;
-//
-//            case FRONT:
-//                face = "FRONT";
-//                break;
-//
-//            case BACK:
-//                face = "BACK";
-//                break;
-//
-//            default:
-//                break;
-//        }
-//        char buffer[128];
-//        sprintf(buffer, "((%d, %d, %d), (%d, %s))", state.lookAtPos.x + state.chunkoffset.x, state.lookAtPos.y + state.chunkoffset.y, state.lookAtPos.z + state.chunkoffset.z, state.lookAtBlock, face);
-//        gterminal.println(std::string(buffer));
 //    }
 
 }

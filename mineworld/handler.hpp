@@ -12,7 +12,6 @@
 #include "timer.hpp"
 
 namespace mineworld {
-    // bool pressedKeys[385]; // max key num in glfw : 384
     
     class Player;
     

@@ -45,47 +45,6 @@ namespace mineworld {
             gchunk.blockUpdate(position, ID);
     }
     
-//    void Block::leftClick(const glm::ivec3 & pos, Face face) {
-//        if (face != NONE) {
-//            gchunk.blockUpdate(pos, 0);
-//        }
-//    }
-//    void Block::rightClick(const glm::ivec3 & pos, Face face) {
-//        glm::ivec3 position(pos);
-//        switch (face) {
-//            case TOP:
-//                position.y++;
-//                break;
-//
-//            case BOTTOM:
-//                position.y--;
-//                break;
-//
-//            case LEFT:
-//                position.x++;
-//                break;
-//
-//            case RIGHT:
-//                position.x--;
-//                break;
-//
-//            case FRONT:
-//                position.z++;
-//                break;
-//
-//            case BACK:
-//                position.z--;
-//                break;
-//
-//            case NONE:
-//                return;
-//
-//            default:
-//                break;
-//        }
-//        gchunk.blockUpdate(position, ID);
-//    }
-    
     bool Block::hit(const glm::vec3 & position, const glm::vec3 & direction, hit_pos_t & hitpos) {
         hit_pos_t lhp;
         hitpos = hit_none;
@@ -101,6 +60,7 @@ namespace mineworld {
     Cube::Cube(rapidjson::Value & blockinfo) : Block() {
         
         vhitbox.push_back(Hitbox({0, 0, 0}, {1, 1, 1}, 0));
+//        vcollision.push_back(CollisionBox({0, 0, 0}, {1, 1, 1}, 0));
         
         isComplete = true;
         name = blockinfo["name"].GetString();
@@ -168,6 +128,7 @@ namespace mineworld {
     Slab::Slab(rapidjson::Value & blockinfo) : Block() {
         
         vhitbox.push_back(Hitbox({0, 0, 0}, {1, 0.5, 1}, 0));
+//        vcollision.push_back(CollisionBox({0, 0, 0}, {1, 0.5, 1}, 0));
         
         isComplete = false;
         name = blockinfo["name"].GetString();
@@ -205,6 +166,8 @@ namespace mineworld {
     Stairs::Stairs(rapidjson::Value & blockinfo) {
         vhitbox.push_back(Hitbox({0, 0, 0}, {1, 1, 0.5}, 0));
         vhitbox.push_back(Hitbox({0, 0, 0.5}, {1, 0.5, 1}, 1));
+//        vcollision.push_back(CollisionBox({0, 0, 0}, {1, 1, 0.5}, 0));
+//        vcollision.push_back(CollisionBox({0, 0, 0.5}, {1, 0.5, 1}, 1));
         
         isComplete = false;
         name = blockinfo["name"].GetString();

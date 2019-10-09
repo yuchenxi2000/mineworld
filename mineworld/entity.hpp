@@ -3,14 +3,17 @@
 
 #include <iostream>
 #include <string>
+#include "util.hpp"
+#include "types.hpp"
 #include "hitbox.hpp"
 #include "cell.hpp"
-#include "util.hpp"
 
 namespace mineworld {
     
     class Entity {
     public:
+//        std::vector<CollisionBox> vcollision;
+        
         glm::vec3 lookdirection;
         entity_pos_t entitypos;
         
@@ -29,8 +32,6 @@ namespace mineworld {
         Entity(const entity_pos_t & epos);
         
         void updateLookAt();
-        
-        void hitDebug();
     };
     
     class Player : public Entity {

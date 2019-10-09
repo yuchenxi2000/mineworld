@@ -1,7 +1,9 @@
 #ifndef types_hpp
 #define types_hpp
 
-#include <iostream>
+#define MW_VERSION "MineWorld 3.0.1"
+#define SCREEN_DISPLAY "MineWorld 3.0.1 holding: "
+
 namespace mineworld {
     const int CELL_X = 16, CELL_Y = 16, CELL_Z = 16, CELL_V = CELL_X * CELL_Y * CELL_Z;
     enum PlayingState {

@@ -56,6 +56,19 @@ namespace mineworld {
         }
     }
     
+    void Cell::vertexToGPU() {
+        if (vertexarray->size() != 0)
+            glbuffer.insert((int)vertexarray->size(), &(*vertexarray)[0]);
+        GPU = true;
+        rebuild = true;
+    }
+    
+    void Cell::clear() {
+        glbuffer.clear();
+        GPU = false;
+        rebuild = false;
+    }
+    
     void Chunk::updateCell(Cell * cell) {
         cell->GPU = false;
         {

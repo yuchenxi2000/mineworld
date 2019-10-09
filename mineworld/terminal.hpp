@@ -13,6 +13,8 @@
 #include "cell.hpp"
 #include "handler.hpp"
 #include "block.hpp"
+#include "types.hpp"
+
 namespace mineworld {
     struct font_loc_t {
         int x, y;

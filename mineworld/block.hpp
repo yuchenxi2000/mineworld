@@ -11,6 +11,7 @@
 #include "cell.hpp"
 #include "terminal.hpp"
 #include "hitbox.hpp"
+//#include "collision.hpp"
 
 namespace mineworld {
     class Cell;
@@ -27,6 +28,7 @@ namespace mineworld {
         int ID;
         bool isComplete;
         std::vector<Hitbox> vhitbox;
+//        std::vector<CollisionBox> vcollision;
         
         Block() {
             isComplete = true;
@@ -36,11 +38,8 @@ namespace mineworld {
                 vertexarray->push_back(shift(r, pos));
             }
         }
-//        virtual void leftClick(const glm::ivec3 & pos, Face face);
         virtual void leftClick(const block_loc_t & pos, const hit_pos_t & hitpos, int holdblock);
         virtual void rightClick(const block_loc_t & pos, const hit_pos_t & hitpos, int holdblock);
-//        virtual void rightClick(const glm::ivec3 & pos, Face face);
-//        virtual void rightClick(const ivec3 & pos, const hit_pos_t & hitpos, Item * holditem);
         bool hit(const glm::vec3 & position, const glm::vec3 & direction, hit_pos_t & hitpos);
     };
     
