@@ -24,10 +24,6 @@ struct Config {
         std::string fsh, vsh;
     } blockshader;
     struct {
-        std::string shadowfsh, shadowvsh;
-        int ShadowMapSize;
-    } shadowmap;
-    struct {
         std::string skyboxfsh, skyboxvsh;
         std::string faces[6];
     } skybox;
@@ -41,16 +37,6 @@ struct Setting {
     float FOV = 45.0f;
     bool INVERT_Y_AXIS = false;
     bool VERTICAL_SYNC = true;
-    
-    int KEY_FORWARD = GLFW_KEY_W;
-    int KEY_BACKWARD = GLFW_KEY_S;
-    int KEY_LEFT = GLFW_KEY_A;
-    int KEY_RIGHT = GLFW_KEY_D;
-    int KEY_UP = GLFW_KEY_SPACE;
-    int KEY_DOWN = GLFW_KEY_LEFT_SHIFT;
-    
-    int KEY_ESC = GLFW_KEY_ESCAPE;
-    int KEY_TYPE = GLFW_KEY_T;
     
     int WINDOW_WIDTH = 800;
     int WINDOW_HEIGHT = 600;

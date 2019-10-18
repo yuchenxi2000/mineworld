@@ -31,39 +31,20 @@ namespace mineworld {
      */
     class TextureManager {
     private:
-        static const int MAX_TEXTURE_NUM = 16;
-        
         int CAPCITY_WIDTH, CAPCITY_HEIGHT;
         Image texture_image;
-        int next_w = 0, next_h = 0;
-        
-        void getGLInfo();
-        void atlas_to_GPU();
-
+        int next_w, next_h;
+        GLuint textureID;
     public:
-        // GL constant
         int MAX_TEXTURE_SIZE;
-        
-        int TexCnt = 0;
-        GLuint textureID[MAX_TEXTURE_NUM];
+        void init();
+        ~TextureManager() {
+            glDeleteTextures(1, &textureID);
+        }
         
         GLuint getTextureID() {
-            return textureID[0];
+            return textureID;
         }
-        
-        TextureManager() {
-            
-        }
-        void init() {
-            glGenTextures(1, &textureID[0]);
-            glBindTexture(GL_TEXTURE_2D, textureID[0]);
-            getGLInfo();
-            texture_image.blankImage(MAX_TEXTURE_SIZE, MAX_TEXTURE_SIZE, 4);
-        }
-        ~TextureManager() {
-            glDeleteTextures(TexCnt, textureID);
-        }
-        
         texture_loc_t loadTexture(const std::string & imagePath);
         void finishLoadTexture();
         

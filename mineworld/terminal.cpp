@@ -152,7 +152,7 @@ namespace mineworld {
             if (B >= 15 && B <= 40) {
                 fontw = B;
                 fonth = B * 2;
-                edited = true;
+                resize();
             }else {
                 println(std::string("error: invalid value. (15~40)"));
             }

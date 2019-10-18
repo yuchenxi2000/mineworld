@@ -190,10 +190,14 @@ namespace mineworld {
     }
     
     void Player::nextBlock() {
-        int maxblock = gblockregister.blockTable.size();
-        if (holdblock < maxblock - 1) {
+        if (holdblock < gblockregister.blockTable.size() - 1) {
             holdblock++;
             gboard.display(std::string(SCREEN_DISPLAY) + gblockregister.getBlockNamebyID(holdblock));
         }
+    }
+    
+    void Player::setHoldBlock(int block) {
+        holdblock = block;
+        gboard.display(std::string(SCREEN_DISPLAY) + gblockregister.getBlockNamebyID(holdblock));
     }
 }

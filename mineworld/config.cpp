@@ -42,9 +42,6 @@ bool importSetting() {
 
         config.blockshader.fsh = configValue["blockshader"]["fsh"].GetString();
         config.blockshader.vsh = configValue["blockshader"]["vsh"].GetString();
-        config.shadowmap.shadowfsh = configValue["shadowmap"]["shadowMapfsh"].GetString();
-        config.shadowmap.shadowvsh = configValue["shadowmap"]["shadowMapvsh"].GetString();
-        config.shadowmap.ShadowMapSize = configValue["shadowmap"]["ShadowMapSize"].GetInt();
         config.skybox.skyboxfsh = configValue["skybox"]["skyboxfsh"].GetString();
         config.skybox.skyboxvsh = configValue["skybox"]["skyboxvsh"].GetString();
         config.skybox.faces[0] = configValue["skybox"]["right"].GetString();

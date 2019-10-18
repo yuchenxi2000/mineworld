@@ -24,7 +24,7 @@ int main(int argc, const char * argv[]) {
     
     // load blocks from block file specified in "config.json"
     mineworld::gblockregister.loadBlock();
-    mineworld::gworldgenerator.init();
+    mineworld::gworldgenerator2.init();
     
     // init shaders.
     // init skybox shader before block shader.
@@ -49,7 +49,7 @@ int main(int argc, const char * argv[]) {
     
     // start game loop
     while (!glfwWindowShouldClose(window)) {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_DEPTH_BUFFER_BIT);
         glfwPollEvents();
         mineworld::handler.handle_input();
         

@@ -52,6 +52,7 @@ namespace mineworld {
         int getHoldBlock() {
             return holdblock;
         }
+        void setHoldBlock(int block);
     };
     
 }

@@ -15,11 +15,6 @@
             "fsh" : "shaders/fsh.glsl",
             "vsh" : "shaders/vsh.glsl"
         },
-        "shadowmap" : {
-            "shadowMapfsh" : "shaders/shadow.fsh",
-            "shadowMapvsh" : "shaders/shadow.vsh",
-            "ShadowMapSize" : 4096
-        },
         "skybox" : {
             "skyboxfsh" : "shaders/skyf.glsl",
             "skyboxvsh" : "shaders/skyv.glsl",

@@ -10,7 +10,7 @@ a simple minecraft clone, written in c++
 * Esc : 按一下暂停，再按继续
 * 鼠标左键：破坏方块
 * 鼠标右键：放置方块
-* T : 敲指令（见__指令__）
+* T : 敲指令（见**指令**）
 * 鼠标滚轮：切换手里拿的方块
 
 ## 指令
@@ -79,17 +79,21 @@ exit // 退出游戏
 
 ![image](https://github.com/yuchenxi2000/mineworld/blob/master/screenshots/example1.jpg)
 
-## 使用的库
+## 编译
 
-* glew
-* glfw
-* glm
-* rapidjson
-* SOIL
+1. 下载依赖库（均可在 GitHub 上找到）
+   * glew (https://github.com/nigels-com/glew)
+   * glfw (https://github.com/glfw/glfw)
+   * rapidjson (https://github.com/Tencent/rapidjson)
+   * SOIL (https://github.com/kbranigan/Simple-OpenGL-Image-Library)
+   * glm (https://github.com/g-truc/glm)
+2. 设置 header search path, library search path
+3. 在 Windows 下请编译32位程序（选Win32），并与 opengl32.dll 链接。编译完可能需要 glew.dll 才能运行。
+4. Mac OS 如果使用的是动态库需与 OpenGL.framework 链接，使用静态库需额外与 Cocoa, CoreVideo, CoreGraphics, CoreFoundation, IOKit 链接。
 
 ## 制作自己的材质包
 
-我因为懒，材质包是 minecraft 游戏里截的。
+因为我懒，材质包是 minecraft 的材质包。
 
 游戏启动时会寻找 config.json，从里面读入设置。然后在 config.json 里指定的 block file 里读入 block 信息（加载材质包）。
 

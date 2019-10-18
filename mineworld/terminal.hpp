@@ -125,8 +125,7 @@ namespace mineworld {
     public:
         void init() {
             Screen::init();
-            
-            display(std::string("MineWorld 3.0.0"));
+            display(std::string(MW_VERSION));
         }
         void resize() {
             Screen::resize();

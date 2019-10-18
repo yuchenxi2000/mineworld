@@ -8,14 +8,18 @@ namespace mineworld {
     
     void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
         if (action == GLFW_PRESS && handler.playstate == PLAYING) {
-            auto & blockloc = handler.player->hitblock;
-            glm::ivec3 pos = blockloc.chunkpos + blockloc.offset;
+            const block_loc_t & blockloc = handler.player->hitblock;
+            const hit_pos_t & hitpos = handler.player->blockhitpos;
             // TODO
             int holdblock = handler.player->getHoldBlock();
+            int blockid = gchunk(blockloc);
+            Block * hitblock = gblockregister.getBlockbyID(blockid);
             if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-                gblockregister.getBlockbyID(holdblock)->rightClick(blockloc, handler.player->blockhitpos, holdblock);
+                hitblock->rightClick(blockloc, hitpos, holdblock);
             }else if (button == GLFW_MOUSE_BUTTON_LEFT) {
-                gblockregister.getBlockbyID(holdblock)->leftClick(pos, handler.player->blockhitpos, holdblock);
+                hitblock->leftClick(blockloc, hitpos, holdblock);
+            }else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+                handler.player->setHoldBlock(blockid);
             }
         }
     }
@@ -174,6 +178,17 @@ namespace mineworld {
                 case GLFW_KEY_BACKSPACE:
                 {
                     gterminal.del();
+                    break;
+                }
+                    
+                case GLFW_KEY_F2:
+                {
+                    time_t abstime = time(0);
+                    tm * ltime = localtime(&abstime);
+                    char buffer[128];
+                    sprintf(buffer, "%d-%d-%d_%d.%d.%d.bmp", ltime->tm_year + 1900, ltime->tm_mon + 1, ltime->tm_mday, ltime->tm_hour, ltime->tm_min, ltime->tm_sec);
+                    SOIL_save_screenshot(buffer, SOIL_SAVE_TYPE_BMP, 0, 0, setting.FRAME_BUFFER_WIDTH, setting.FRAME_BUFFER_HEIGHT);
+                    std::cout << "screenshots saved as " << buffer << std::endl;
                     break;
                 }
                     

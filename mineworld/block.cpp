@@ -42,7 +42,7 @@ namespace mineworld {
                 break;
         }
         if (gchunk(position) == 0)
-            gchunk.blockUpdate(position, ID);
+            gchunk.blockUpdate(position, holdblock);
     }
     
     bool Block::hit(const glm::vec3 & position, const glm::vec3 & direction, hit_pos_t & hitpos) {

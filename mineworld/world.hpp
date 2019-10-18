@@ -16,4 +16,17 @@ namespace mineworld {
     extern WorldGenerator gworldgenerator;
 }
 
+namespace mineworld {
+    class WorldGenerator2 {
+        struct {
+            int grass, log, leave;
+        } blockID;
+    public:
+        void init();
+        void generateTree(int * blocks, const glm::ivec3 & pos);
+        void generateWorld(const glm::ivec3 & chunkpos, Cell * cell);
+    };
+    extern WorldGenerator2 gworldgenerator2;
+}
+
 #endif /* world_hpp */
