@@ -81,19 +81,28 @@ exit // 退出游戏
 
 ## 编译
 
-1. 下载依赖库（均可在 GitHub 上找到）
+1. 下载依赖库（均可在 GitHub 上找到）并设置 header search path, library search path。
    * glew (https://github.com/nigels-com/glew)
    * glfw (https://github.com/glfw/glfw)
    * rapidjson (https://github.com/Tencent/rapidjson)
    * SOIL (https://github.com/kbranigan/Simple-OpenGL-Image-Library)
    * glm (https://github.com/g-truc/glm)
-2. 设置 header search path, library search path
+   
+2. 不想自己下载、编译库：
+
+   include 下有全部头文件，lib 文件夹下有编译好的库
+
+   设置header search path=include
+
+   设置library search path=lib/MacOS 或 lib/Win32
+
 3. 在 Windows 下请编译32位程序（选Win32），并与 opengl32.dll 链接。编译完可能需要 glew.dll 才能运行。
+
 4. Mac OS 如果使用的是动态库需与 OpenGL.framework 链接，使用静态库需额外与 Cocoa, CoreVideo, CoreGraphics, CoreFoundation, IOKit 链接。
 
 ## 制作自己的材质包
 
-因为我懒，材质包是 minecraft 的材质包。
+因为我懒，材质包是 minecraft 的材质包借过来的。
 
 游戏启动时会寻找 config.json，从里面读入设置。然后在 config.json 里指定的 block file 里读入 block 信息（加载材质包）。
 

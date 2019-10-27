@@ -29,6 +29,7 @@ namespace mineworld {
     WorldGenerator gworldgenerator;
 }
 
+/*
 namespace mineworld {
     unsigned int seed = 2333;
     int p[256];
@@ -183,3 +184,4 @@ namespace mineworld {
     }
     WorldGenerator2 gworldgenerator2;
 }
+*/

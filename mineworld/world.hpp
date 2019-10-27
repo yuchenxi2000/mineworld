@@ -15,7 +15,7 @@ namespace mineworld {
     };
     extern WorldGenerator gworldgenerator;
 }
-
+/*
 namespace mineworld {
     class WorldGenerator2 {
         struct {
@@ -28,5 +28,6 @@ namespace mineworld {
     };
     extern WorldGenerator2 gworldgenerator2;
 }
+ */
 
 #endif /* world_hpp */

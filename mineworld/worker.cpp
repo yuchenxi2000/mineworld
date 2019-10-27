@@ -31,7 +31,7 @@ namespace worker {
             vertexarray->reserve(CELL_X * CELL_Z * CELL_Y / 2);
             
             if (!cell->rebuild)
-                gworldgenerator2.generateWorld(cell->posoffset, cell);
+                gworldgenerator.generateWorld(cell->posoffset, cell);
             
             int cnt = 0;
             glm::ivec3 pos;

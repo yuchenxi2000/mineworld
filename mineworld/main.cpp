@@ -24,7 +24,7 @@ int main(int argc, const char * argv[]) {
     
     // load blocks from block file specified in "config.json"
     mineworld::gblockregister.loadBlock();
-    mineworld::gworldgenerator2.init();
+    mineworld::gworldgenerator.init();
     
     // init shaders.
     // init skybox shader before block shader.
