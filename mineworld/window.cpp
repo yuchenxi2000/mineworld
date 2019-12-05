@@ -10,6 +10,7 @@ namespace mineworld {
     void frame_buffer_size_callback(GLFWwindow * window, int width, int height) {
         setting.FRAME_BUFFER_WIDTH = width;
         setting.FRAME_BUFFER_HEIGHT = height;
+        glViewport(0, 0, width, height);
         handler.updatePerspectiveMat(glm::perspective(
                                                       setting.FOV,
                                                       GLfloat(width) / GLfloat(height),
