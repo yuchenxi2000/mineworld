@@ -1,0 +1,12 @@
+[submodule "deps/glfw"]
+	path = deps/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "deps/glm"]
+	path = deps/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "deps/rapidjson"]
+	path = deps/rapidjson
+	url = https://github.com/Tencent/rapidjson.git
+[submodule "deps/Simple-OpenGL-Image-Library"]
+	path = deps/Simple-OpenGL-Image-Library
+	url = https://github.com/kbranigan/Simple-OpenGL-Image-Library

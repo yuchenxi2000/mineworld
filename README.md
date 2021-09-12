@@ -11,7 +11,7 @@ a simple minecraft clone, written in c++
 * 鼠标左键：破坏方块
 * 鼠标右键：放置方块
 * T : 敲指令（见**指令**）
-* 鼠标滚轮：切换手里拿的方块
+* 键盘左右键：切换手里拿的方块
 
 ## 指令
 
@@ -81,24 +81,17 @@ exit // 退出游戏
 
 ## 编译
 
-1. 下载依赖库（均可在 GitHub 上找到）并设置 header search path, library search path。
-   * glew (https://github.com/nigels-com/glew)
-   * glfw (https://github.com/glfw/glfw)
-   * rapidjson (https://github.com/Tencent/rapidjson)
-   * SOIL (https://github.com/kbranigan/Simple-OpenGL-Image-Library)
-   * glm (https://github.com/g-truc/glm)
-   
-2. 不想自己下载、编译库：
+GitHub Release里的支持macOS 10.13及以上、Windows 8.1及以上，其他系统可以自行编译。
 
-   include 下有全部头文件，lib 文件夹下有编译好的库
+为方便编译已经改为CMake编译系统，本人在macOS 11.5.2下测试成功，如果在其他机器上失败欢迎提issue或者pull request。glew不方便放进CMake，请安装二进制库或者自己编译。
 
-   设置header search path=include
+1. clone本仓库
 
-   设置library search path=lib/MacOS 或 lib/Win32
+2. 安装glew（或者自行编译）
 
-3. 在 Windows 下请编译32位程序（选Win32），并与 opengl32.dll 链接。编译完可能需要 glew.dll 才能运行。
+   从 http://glew.sourceforge.net/ （或者 https://github.com/nigels-com/glew ）下载安装，macOS下可以用brew
 
-4. Mac OS 如果使用的是动态库需与 OpenGL.framework 链接，使用静态库需额外与 Cocoa, CoreVideo, CoreGraphics, CoreFoundation, IOKit 链接。
+3. cmake编译即可
 
 ## 制作自己的材质包
 
@@ -112,4 +105,5 @@ exit // 退出游戏
 
 yuchenxi2000
 
-2019.9.12
+2021.9.12
+
