@@ -50,24 +50,30 @@ cat > "$APP_DIR/Contents/Info.plist" << 'PLIST'
 </plist>
 PLIST
 
-# --- Bundle GLEW dylib ---
-GLEW_DYLIB=$(otool -L "$BINARY" | grep -oE '/[^ ]*libGLEW[^ ]*\.dylib')
-GLEW_NAME=$(basename "$GLEW_DYLIB")
-
-echo "GLEW dylib: $GLEW_DYLIB"
+# --- Bundle binary ---
 echo "Creating MineWorld.app..."
 
 # copy binary to MacOS/
 cp "$BINARY" "$APP_DIR/Contents/MacOS/"
 
-# copy GLEW dylib to MacOS/ (next to the binary)
-cp "$GLEW_DYLIB" "$APP_DIR/Contents/MacOS/"
+# check if GLEW is dynamically linked (Homebrew shared build) or statically linked (universal build)
+GLEW_DYLIB=$(otool -L "$BINARY" | grep -oE '/[^ ]*libGLEW[^ ]*\.dylib' || true)
 
-# fix binary to find GLEW at @executable_path
-install_name_tool -change "$GLEW_DYLIB" "@executable_path/$GLEW_NAME" "$APP_DIR/Contents/MacOS/mineworld"
+if [ -n "$GLEW_DYLIB" ]; then
+    GLEW_NAME=$(basename "$GLEW_DYLIB")
+    echo "Bundling GLEW dylib: $GLEW_DYLIB"
 
-# re-sign binary (install_name_tool invalidates the linker's ad-hoc signature)
-codesign --force --sign - "$APP_DIR/Contents/MacOS/mineworld"
+    # copy GLEW dylib to MacOS/ (next to the binary)
+    cp "$GLEW_DYLIB" "$APP_DIR/Contents/MacOS/"
+
+    # fix binary to find GLEW at @executable_path
+    install_name_tool -change "$GLEW_DYLIB" "@executable_path/$GLEW_NAME" "$APP_DIR/Contents/MacOS/mineworld"
+
+    # re-sign binary (install_name_tool invalidates the linker's ad-hoc signature)
+    codesign --force --sign - "$APP_DIR/Contents/MacOS/mineworld"
+else
+    echo "GLEW is statically linked, no dylib bundling needed"
+fi
 
 # copy resources to Resources/
 cp -r "$SOURCE_DIR/res/" "$APP_DIR/Contents/Resources/"

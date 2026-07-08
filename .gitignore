@@ -2,7 +2,8 @@ test
 .claude/
 
 # build directory
-build/
+build*/
+deps/glew*/
 
 # macOS
 .DS_Store

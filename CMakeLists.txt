@@ -7,18 +7,28 @@ set(CMAKE_CXX_STANDARD 17)
 # glfw
 add_subdirectory(deps/glfw)
 
-# glew (static by default on Windows/MinGW; macOS Homebrew only ships shared)
-option(GLEW_SHARED "Use shared GLEW library (DLL/dylib) instead of static" OFF)
-if(GLEW_SHARED OR APPLE)
-    set(GLEW_USE_STATIC_LIBS OFF)
-else()
-    set(GLEW_USE_STATIC_LIBS ON)
-endif()
-find_package(GLEW REQUIRED)
-include_directories(${GLEW_INCLUDE_DIRS})
-
-if(GLEW_USE_STATIC_LIBS)
+# glew
+# GLEW_CUSTOM_PATH can be set to use a pre-built universal GLEW (macOS packaging).
+# Otherwise the standard find_package path is used.
+if(DEFINED GLEW_CUSTOM_PATH)
+    add_library(GLEW::GLEW STATIC IMPORTED)
+    set_target_properties(GLEW::GLEW PROPERTIES
+        IMPORTED_LOCATION "${GLEW_CUSTOM_PATH}/lib/libGLEW.a"
+        INTERFACE_INCLUDE_DIRECTORIES "${GLEW_CUSTOM_PATH}/include"
+    )
     add_definitions(-DGLEW_STATIC)
+else()
+    option(GLEW_SHARED "Use shared GLEW library (DLL/dylib) instead of static" OFF)
+    if(GLEW_SHARED OR APPLE)
+        set(GLEW_USE_STATIC_LIBS OFF)
+    else()
+        set(GLEW_USE_STATIC_LIBS ON)
+    endif()
+    find_package(GLEW REQUIRED)
+    include_directories(${GLEW_INCLUDE_DIRS})
+    if(GLEW_USE_STATIC_LIBS)
+        add_definitions(-DGLEW_STATIC)
+    endif()
 endif()
 
 # SOIL (upstream cmake_minimum_required is 2.6, need policy override)
