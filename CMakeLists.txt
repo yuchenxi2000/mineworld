@@ -1,16 +1,28 @@
-cmake_minimum_required(VERSION 3.10.2)
+cmake_minimum_required(VERSION 3.12)
+
 project(mineworld)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 # glfw
 add_subdirectory(deps/glfw)
 
-# glew
+# glew (static by default on Windows/MinGW; macOS Homebrew only ships shared)
+option(GLEW_SHARED "Use shared GLEW library (DLL/dylib) instead of static" OFF)
+if(GLEW_SHARED OR APPLE)
+    set(GLEW_USE_STATIC_LIBS OFF)
+else()
+    set(GLEW_USE_STATIC_LIBS ON)
+endif()
 find_package(GLEW REQUIRED)
 include_directories(${GLEW_INCLUDE_DIRS})
 
-# SOIL
+if(GLEW_USE_STATIC_LIBS)
+    add_definitions(-DGLEW_STATIC)
+endif()
+
+# SOIL (upstream cmake_minimum_required is 2.6, need policy override)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 add_subdirectory(deps/Simple-OpenGL-Image-Library)
 
 # rapidjson & glm & SOIL
@@ -18,3 +30,19 @@ include_directories(deps/rapidjson/include deps/glm deps/Simple-OpenGL-Image-Lib
 
 add_executable(mineworld src/block.cpp src/cell.cpp src/config.cpp src/entity.cpp src/glbuffer.cpp src/handler.cpp src/hitbox.cpp src/image.cpp src/main.cpp src/mineworld.cpp src/model.cpp src/shader.cpp src/shape.cpp src/terminal.cpp src/texture.cpp src/timer.cpp src/types.cpp src/util.cpp src/window.cpp src/worker.cpp src/world.cpp)
 target_link_libraries(mineworld glfw SOIL GLEW::GLEW)
+
+# MinGW (MSYS2 etc.) must link runtime statically, otherwise users
+# without MSYS2 installed will miss libgcc/libstdc++/libwinpthread DLLs.
+# MSVC uses dynamic CRT by default — users can install VC Redist.
+if(MINGW)
+    target_link_options(mineworld PRIVATE -static)
+endif()
+
+# macOS: packaging target — bundles GLEW dylib and res/ for GitHub Releases.
+# Usage: cmake --build build --target package
+if(APPLE)
+    add_custom_target(package
+        COMMAND bash "${CMAKE_SOURCE_DIR}/package_macos.sh" "${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}"
+        DEPENDS mineworld
+    )
+endif()

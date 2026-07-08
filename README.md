@@ -1,5 +1,7 @@
 # MineWorld
 
+[English](README-en.md)
+
 ## 简介
 
 a simple minecraft clone, written in c++
@@ -77,23 +79,98 @@ exit // 退出游戏
 
 ## 截图
 
-![image](https://github.com/yuchenxi2000/mineworld/blob/master/screenshots/example1.jpg)
+![image](screenshots/example1.jpg)
 
 ## 编译
 
-GitHub Release里的支持macOS 10.13及以上、Windows 8.1及以上，其他系统可以自行编译。
+### 前置条件
 
-为方便编译已经改为CMake编译系统，本人在macOS 11.5.2下测试成功，如果在其他机器上失败欢迎提issue或者pull request。glew不方便放进CMake，请安装二进制库或者自己编译。
+- CMake 3.12+
+- Git（用于克隆仓库和子模块）
+- 支持 C++17 的编译器
 
-1. clone本仓库
+```bash
+git clone --recursive https://github.com/yuchenxi2000/mineworld.git
+cd mineworld
+```
 
-2. 安装glew（或者自行编译）
+### Windows
 
-   从 http://glew.sourceforge.net/ （或者 https://github.com/nigels-com/glew ）下载安装，macOS下可以用brew
+两种方式任选其一。
 
-3. cmake编译即可
+#### 方式一：MSYS2 UCRT64
 
-注意可执行文件必须放在res目录下，也就是说启动目录下必须有config.json等文件，因为程序运行时需要读取配置文件/材质包等资源文件。
+1. 安装 [MSYS2](https://www.msys2.org/)，开始菜单搜索msys2，点击运行打开终端
+
+2. 安装编译工具和 GLEW：
+
+   ```bash
+   pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-make mingw-w64-ucrt-x86_64-glew
+   ```
+
+3. 编译：
+
+   ```bash
+   mkdir build && cd build
+   cmake .. -G "MinGW Makefiles"
+   cmake --build .
+   ```
+
+4. 运行（**必须在 `res/` 目录下运行**）：
+
+   ```bash
+   cd ../res && ../build/mineworld.exe
+   ```
+
+#### 方式二：Visual Studio Build Tools
+
+1. 安装 [Visual Studio Build Tools](https://visualstudio.microsoft.com/zh-hans/downloads/)（在「所有下载」中找「Visual Studio 生成工具」），勾选「使用 C++ 的桌面开发」
+
+2. 下载 [GLEW 预编译包](https://glew.sourceforge.net/)，解压到 `deps/glew-2.3.1/`
+
+3. 打开 **PowerShell**（非 MSYS2 终端），编译 Release 版本：
+
+   ```powershell
+   mkdir build_vs; cd build_vs
+   cmake .. -G "Visual Studio 17 2022" -DGLEW_ROOT="<path-to>/deps/glew-2.3.1"
+   cmake --build . --config Release
+   ```
+
+   > `-DGLEW_ROOT` 请替换为解压 GLEW 的实际绝对路径。
+
+   > **注意：** PowerShell 的 PATH 中不能有 MSYS2 的路径（如 `C:\msys64\ucrt64\bin`），否则 MSVC 会错误引用 MinGW 头文件导致编译失败。
+
+4. 运行：
+
+   ```powershell
+   cd ../res; ..\build_vs\Release\mineworld.exe
+   ```
+
+> 如果 VS 版本不同，调整 `-G` 参数（如 VS 2026 用 `"Visual Studio 18 2026"`）。
+
+### macOS
+
+```bash
+brew install glew
+mkdir build && cd build
+cmake ..
+make
+cd ../res && ../build/mineworld
+```
+
+### Linux
+
+```bash
+apt install libglew-dev   # 或对应包管理器
+mkdir build && cd build
+cmake ..
+make
+cd ../res && ../build/mineworld
+```
+
+### 重要提示
+
+可执行文件**必须在 `res/` 目录下运行**，因为程序需要读取当前目录下的 `config.json`、材质包、着色器等资源文件。
 
 ## 制作自己的材质包
 
@@ -103,9 +180,7 @@ GitHub Release里的支持macOS 10.13及以上、Windows 8.1及以上，其他�
 
 如果想制作材质包，可以参考我写的 block.json。
 
+## 许可
 
-
-yuchenxi2000
-
-2021.9.12
+MIT License. 详见 [LICENSE.txt](LICENSE.txt)。
 
