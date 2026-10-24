@@ -184,6 +184,8 @@ ctest --test-dir build --output-on-failure
 
 Visual Studio 等多配置生成器需加上 `-C Release`，与编译配置一致。默认回归测试无需打开窗口；额外配置 `-DMINEWORLD_GL_TESTS=ON` 可以启用隐藏窗口的 OpenGL 测试，需要可用的桌面图形环境。
 
+macOS 应用包、Universal Binary 双架构验证及完整运行命令见 [tests/README.md](tests/README.md)。
+
 ### 重要提示
 
 程序优先读取当前目录的 `config.json`，也会在可执行文件附近的 `res/` 目录及 macOS 应用包的 `Resources/` 中寻找资源。保持 `res/` 中的配置、材质和着色器目录完整。

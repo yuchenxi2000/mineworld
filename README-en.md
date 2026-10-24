@@ -178,6 +178,8 @@ cd ../res && ../build/mineworld
 
 Configure with `-DBUILD_TESTING=ON`, build, and run `ctest --test-dir build --output-on-failure`. For multi-config generators, also specify the configuration, for example `-C Release`. Default regression tests do not open a window. Enable `-DMINEWORLD_GL_TESTS=ON` for an additional hidden-window OpenGL smoke test, which requires a working desktop graphics context.
 
+For macOS package and Universal Binary validation commands, see [tests/README.md](tests/README.md).
+
 ### Important
 
 The executable checks the current directory, nearby `res/` directories, and macOS bundle `Resources/` for `config.json`. Keep the resource directory and its textures and shaders together.

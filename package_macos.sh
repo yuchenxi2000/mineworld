@@ -54,7 +54,7 @@ PLIST
 echo "Creating MineWorld.app..."
 
 # copy binary to MacOS/
-cp "$BINARY" "$APP_DIR/Contents/MacOS/"
+cp -X "$BINARY" "$APP_DIR/Contents/MacOS/"
 
 # check if GLEW is dynamically linked (Homebrew shared build) or statically linked (universal build)
 GLEW_DYLIB=$(otool -L "$BINARY" | grep -oE '/[^ ]*libGLEW[^ ]*\.dylib' || true)
@@ -64,19 +64,24 @@ if [ -n "$GLEW_DYLIB" ]; then
     echo "Bundling GLEW dylib: $GLEW_DYLIB"
 
     # copy GLEW dylib to MacOS/ (next to the binary)
-    cp "$GLEW_DYLIB" "$APP_DIR/Contents/MacOS/"
+    cp -X "$GLEW_DYLIB" "$APP_DIR/Contents/MacOS/"
 
     # fix binary to find GLEW at @executable_path
     install_name_tool -change "$GLEW_DYLIB" "@executable_path/$GLEW_NAME" "$APP_DIR/Contents/MacOS/mineworld"
 
-    # re-sign binary (install_name_tool invalidates the linker's ad-hoc signature)
-    codesign --force --sign - "$APP_DIR/Contents/MacOS/mineworld"
+    # Sign bundled code before sealing the complete app below.
+    codesign --force --sign - "$APP_DIR/Contents/MacOS/$GLEW_NAME"
 else
     echo "GLEW is statically linked, no dylib bundling needed"
 fi
 
-# copy resources to Resources/
-cp -r "$SOURCE_DIR/res/" "$APP_DIR/Contents/Resources/"
+# Copy resources without Finder metadata/resource forks, which codesign rejects.
+cp -RX "$SOURCE_DIR/res/" "$APP_DIR/Contents/Resources/"
+
+# Sign after copying resources so the seal describes the finished bundle.
+# This also replaces the signature invalidated by install_name_tool.
+codesign --force --sign - "$APP_DIR"
+codesign --verify --deep --strict --verbose=2 "$APP_DIR"
 
 echo ""
 echo "App bundle ready: $APP_DIR"
