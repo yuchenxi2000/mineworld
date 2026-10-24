@@ -1,87 +1,62 @@
 #ifndef image_hpp
 #define image_hpp
 #include <cstring>
+#include <limits>
+#include <memory>
+#include <stdexcept>
+#include <vector>
 #include <SOIL.h>
 
-// simple wrapper for SOIL
-// load, save image,
-// copy contents of one image to another image (creating texture atlas)
+// Own C++ pixel storage; SOIL buffers are released by SOIL immediately after import.
 struct Image {
-    unsigned char * data;
-    int width, height, channel;
-    Image() {
-        data = 0;
+private:
+    std::vector<unsigned char> pixels;
+    static size_t byteCount(int w, int h, int ch) {
+        if (w <= 0 || h <= 0 || ch < 1 || ch > 4) throw std::invalid_argument("invalid image dimensions");
+        size_t count = static_cast<size_t>(w);
+        if (count > std::numeric_limits<size_t>::max() / static_cast<size_t>(h) / static_cast<size_t>(ch))
+            throw std::length_error("image too large");
+        return count * static_cast<size_t>(h) * static_cast<size_t>(ch);
     }
-    Image(unsigned char * data, int width, int height, int channel) {
-        this->data = data;
-        this->width = width;
-        this->height = height;
-        this->channel = channel;
-    }
-    Image(const char * path, int force_channels = 0) {
-        loadFromFile(path, force_channels);
-    }
-    ~Image() {
-        if (data) {
-//            SOIL_free_image_data(data);
-            delete [] data;
-        }
-    }
-    
-    // If force_channels is specified, image would be open with channels of force_channels.
-    // While value of channels is still channels of the origin image,
-    // so I set the channels variable manually.
-    // Any image should be open with 4 channels (with alpha channel)
+public:
+    int width = 0, height = 0, channel = 0;
+    Image() = default;
+    explicit Image(const char * path, int force_channels = 0) { loadFromFile(path, force_channels); }
     bool loadFromFile(const char * path, int force_channels = 0) {
-        data = SOIL_load_image(path, &width, &height, &channel, force_channels);
-        if (force_channels) channel = force_channels;
-        return data;
-    }
-    operator unsigned char * () {
-        return data;
-    }
-    unsigned char & operator () (int w, int h, int ch) const {
-        return data[channel * (width * h + w) + ch];
-    }
-    
-    // get a new blank image
-    void blankImage(int w, int h, int ch) {
-        this->width = w;
-        this->height = h;
-        this->channel = ch;
-        if (data) delete [] data;
-        data = new unsigned char[w * h * ch]();
-    }
-    
-    bool isNull() {
-        return data == 0;
-    }
-    
-    // delete image buffer
-    void clear() {
-        if (data) delete [] data;
-        this->data = 0;
-        this->width = 0;
-        this->height = 0;
-        this->channel = 0;
-    }
-    
-    // copy contents of one image to another image
-    bool copy(const Image & other, int w, int h) {
-        // two channels should equal
-        if (channel != other.channel) return false;
-        if (w < 0 || w + other.width > width || h < 0 || h + other.height > height) return false;
-        for (int r = 0; r < other.height; ++r) {
-            memcpy(&(*this)(w, h + r, 0), &other(0, r, 0), other.width * other.channel);
-        }
+        clear();
+        if (force_channels < 0 || force_channels > 4) return false;
+        int w = 0, h = 0, ch = 0;
+        std::unique_ptr<unsigned char, decltype(&SOIL_free_image_data)> loaded(
+            SOIL_load_image(path, &w, &h, &ch, force_channels), &SOIL_free_image_data);
+        if (!loaded) return false;
+        if (force_channels) ch = force_channels;
+        pixels.assign(loaded.get(), loaded.get() + byteCount(w, h, ch));
+        width = w; height = h; channel = ch;
         return true;
     }
-    
-    // Unforturnately, image can only be saved with bmp format.
-    // Maybe one of SOIL's features...
-    bool save(const char * path) {
-        return SOIL_save_image(path, SOIL_SAVE_TYPE_BMP, width, height, channel, data);
+    unsigned char * data() { return pixels.data(); }
+    const unsigned char * data() const { return pixels.data(); }
+    operator const unsigned char * () const { return data(); }
+    unsigned char & operator()(int w, int h, int ch) { return pixels[channel * (width*h + w) + ch]; }
+    const unsigned char & operator()(int w, int h, int ch) const { return pixels[channel * (width*h + w) + ch]; }
+    void blankImage(int w, int h, int ch) {
+        pixels.assign(byteCount(w, h, ch), 0);
+        width = w; height = h; channel = ch;
+    }
+    bool isNull() const { return pixels.empty(); }
+    void clear() {
+        std::vector<unsigned char>().swap(pixels);
+        width = height = channel = 0;
+    }
+    bool copy(const Image & other, int w, int h) {
+        if (isNull() || other.isNull() || channel != other.channel) return false;
+        if (w < 0 || h < 0 || other.width > width - w || other.height > height - h) return false;
+        for (int row = 0; row < other.height; ++row)
+            std::memcpy(&(*this)(w,h+row,0), &other(0,row,0), static_cast<size_t>(other.width)*other.channel);
+        return true;
+    }
+    bool save(const char * path) const {
+        return SOIL_save_image(path, SOIL_SAVE_TYPE_BMP, width, height, channel, data()) != 0;
     }
 };
-
-#endif /* image_hpp */
+#endif

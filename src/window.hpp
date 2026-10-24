@@ -10,5 +10,6 @@
  */
 namespace mineworld {
     GLFWwindow * glfwStart();
+    void installWindowCallbacks(GLFWwindow * window);
 }
 #endif /* window_hpp */

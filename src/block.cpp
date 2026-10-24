@@ -1,9 +1,12 @@
 #include "block.hpp"
+#include "cell.hpp"
+#include "terminal.hpp"
+#include "json.hpp"
 
 namespace mineworld {
     BlockRegister gblockregister;
     
-    void Block::leftClick(const block_loc_t & pos, const hit_pos_t & hitpos, int holdblock) {
+    void Block::leftClick(const block_loc_t & pos, const hit_pos_t & hitpos, int) {
         if (hitpos.face != NONE)
             gchunk.blockUpdate(pos, 0);
     }
@@ -45,7 +48,7 @@ namespace mineworld {
             gchunk.blockUpdate(position, holdblock);
     }
     
-    bool Block::hit(const glm::vec3 & position, const glm::vec3 & direction, hit_pos_t & hitpos) {
+    bool Block::hit(const glm::vec3 & position, const glm::vec3 & direction, hit_pos_t & hitpos) const {
         hit_pos_t lhp;
         hitpos = hit_none;
         for (auto & box : vhitbox) {
@@ -60,7 +63,6 @@ namespace mineworld {
     Cube::Cube(rapidjson::Value & blockinfo) : Block() {
         
         vhitbox.push_back(Hitbox({0, 0, 0}, {1, 1, 1}, 0));
-//        vcollision.push_back(CollisionBox({0, 0, 0}, {1, 1, 1}, 0));
         
         isComplete = true;
         name = blockinfo["name"].GetString();
@@ -95,7 +97,7 @@ namespace mineworld {
         
     }
     
-    void Cube::addVertex(std::vector<rect> * vertexarray, Cell * cell, glm::ivec3 & pos) {
+    void Cube::addVertex(std::vector<rect> * vertexarray, const MeshSnapshot * cell, const glm::ivec3 & pos) const {
         int block;
         
         block = cell->upper(pos);
@@ -128,7 +130,6 @@ namespace mineworld {
     Slab::Slab(rapidjson::Value & blockinfo) : Block() {
         
         vhitbox.push_back(Hitbox({0, 0, 0}, {1, 0.5, 1}, 0));
-//        vcollision.push_back(CollisionBox({0, 0, 0}, {1, 0.5, 1}, 0));
         
         isComplete = false;
         name = blockinfo["name"].GetString();
@@ -166,8 +167,6 @@ namespace mineworld {
     Stairs::Stairs(rapidjson::Value & blockinfo) {
         vhitbox.push_back(Hitbox({0, 0, 0}, {1, 1, 0.5}, 0));
         vhitbox.push_back(Hitbox({0, 0, 0.5}, {1, 0.5, 1}, 1));
-//        vcollision.push_back(CollisionBox({0, 0, 0}, {1, 1, 0.5}, 0));
-//        vcollision.push_back(CollisionBox({0, 0, 0.5}, {1, 0.5, 1}, 1));
         
         isComplete = false;
         name = blockinfo["name"].GetString();
@@ -244,48 +243,46 @@ namespace mineworld {
     }
     
     void BlockRegister::loadBlock() {
-        addBlock(new Air()); // air block
-        
-        FILE * fp = fopen(config.blockFilePath.c_str(), "r");
-        if (!fp) {
-            std::cerr << "[block] failed to open block file" << std::endl;
-            return;
+        auto blockFile = readJson(config.blockFilePath);
+        if (!blockFile.IsArray()) throw std::runtime_error("block file must contain an array");
+        // Validate before constructors access JSON or allocate GPU resources.
+        std::map<std::string, bool> names{{"air", true}};
+        for (auto & package : blockFile.GetArray()) {
+            jsonString(package, "package");
+            const auto & blocks = jsonMember(package, "block");
+            if (!blocks.IsArray()) throw std::runtime_error("block field must be an array");
+            for (const auto & block : blocks.GetArray()) {
+                auto name = jsonString(block, "name");
+                auto type = jsonString(block, "type");
+                if (name.empty() || !names.emplace(name, true).second)
+                    throw std::runtime_error("empty or duplicate block name: " + name);
+                const auto & texture = jsonMember(block, "texture");
+                if (type == "grass") {
+                    jsonString(texture, "cross1"); jsonString(texture, "cross2");
+                } else if (type == "rail") {
+                    jsonString(texture, "upper");
+                } else if (type == "cube" || type == "glass" || type == "slab" || type == "stairs") {
+                    for (const char * face : {"upper", "bottom", "left", "right", "front", "back"}) jsonString(texture, face);
+                } else throw std::runtime_error("unknown block render type: " + type);
+            }
         }
-        char readBuffer[2048];
-        rapidjson::FileReadStream fs(fp, readBuffer, sizeof(readBuffer));
-        rapidjson::Document blockFile;
-        blockFile.ParseStream(fs);
-        
+        blockTable.clear();
+        map_name_id.clear();
+        addBlock(new Air());
         gtexturemanager.init();
         for (auto & package : blockFile.GetArray()) {
-            std::string packageName = package["package"].GetString();
-            std::cout << std::string("[block] package name ") + packageName << std::endl;
-            
-            rapidjson::Value & blockinfo = package["block"];
-            for (auto & block : blockinfo.GetArray()) {
-                std::string renderType = block["type"].GetString();
-                std::string blockname = block["name"].GetString();
-                if (renderType == "cube") {
-                    addBlock(new Cube(block));
-                }else if (renderType == "glass") {
-                    addBlock(new Glass(block));
-                }else if (renderType == "slab") {
-                    addBlock(new Slab(block));
-                }else if (renderType == "stairs") {
-                    addBlock(new Stairs(block));
-                }else if (renderType == "rail") {
-                    addBlock(new Rail(block));
-                }else if (renderType == "grass") {
-                    addBlock(new Grass(block));
-                }else {
-                    std::cerr << std::string("[block] unknown render type. skip block ") + blockname << std::endl;
-                }
+            for (auto & block : package["block"].GetArray()) {
+                std::string type = block["type"].GetString();
+                if (type == "cube") addBlock(new Cube(block));
+                else if (type == "glass") addBlock(new Glass(block));
+                else if (type == "slab") addBlock(new Slab(block));
+                else if (type == "stairs") addBlock(new Stairs(block));
+                else if (type == "rail") addBlock(new Rail(block));
+                else if (type == "grass") addBlock(new Grass(block));
             }
-            
         }
         gtexturemanager.finishLoadTexture();
     }
-    
     void BlockRegister::listBlock() {
         for (auto & p : map_name_id) {
             gterminal.println(p.first);

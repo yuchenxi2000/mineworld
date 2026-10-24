@@ -1,16 +1,23 @@
 #include "handler.hpp"
 #include "config.hpp"
+#include "cell.hpp"
+#include "block.hpp"
+#include "terminal.hpp"
+#include "image.hpp"
+#include <algorithm>
+#include <ctime>
 
 namespace mineworld {
     Handler handler;
     
     bool keypressed[349]; // max key num in glfw : 348
+    void resetInput() { std::fill(std::begin(keypressed), std::end(keypressed), false); }
     
-    void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    void mouse_button_callback(GLFWwindow*, int button, int action, int) {
         if (action == GLFW_PRESS && handler.playstate == PLAYING) {
+            if (!handler.player || handler.player->blockhitpos.face == NONE) return;
             const block_loc_t & blockloc = handler.player->hitblock;
             const hit_pos_t & hitpos = handler.player->blockhitpos;
-            // TODO
             int holdblock = handler.player->getHoldBlock();
             int blockid = gchunk(blockloc);
             Block * hitblock = gblockregister.getBlockbyID(blockid);
@@ -24,13 +31,11 @@ namespace mineworld {
         }
     }
     
-    void Handler::init(GLFWwindow * window, Player * player) {
-        this->window = window;
+    void Handler::init(GLFWwindow * targetWindow, Player * targetPlayer) {
+        window = targetWindow;
         glfwSetKeyCallback(window, KeyCallBack);
         glfwSetMouseButtonCallback(window, mouse_button_callback);
-        // TODO
-//        glfwSetScrollCallback(window, scroll_callback);
-        this->player = player;
+        player = targetPlayer;
         playstate = PLAYING;
         
         horizontalAngle = 0.0;
@@ -42,7 +47,11 @@ namespace mineworld {
         
         runSpeed = setting.walkSpeed;
         
-        ProjectionMatrix = glm::perspective(setting.FOV, (float)setting.FRAME_BUFFER_WIDTH / (float)setting.FRAME_BUFFER_HEIGHT, 0.1f, 100.0f);
+        ProjectionMatrix = glm::perspective(glm::radians(setting.FOV),
+            static_cast<float>(setting.FRAME_BUFFER_WIDTH) / std::max(1,setting.FRAME_BUFFER_HEIGHT),
+            0.1f, std::max(100.0f,(config.VISIBLE_DISTANCE+2)*16.0f));
+        resetInput();
+        timer.reset();
     }
     
     void Handler::handle_input() {
@@ -102,23 +111,23 @@ namespace mineworld {
         this->ProjectionMatrix = perspectiveMat;
     }
     
-    void KeyCallBack(GLFWwindow * window, int key, int scancode, int action, int mods){
+    void KeyCallBack(GLFWwindow * window, int key, int, int action, int){
         if (action == GLFW_PRESS) {
-            if (key >= 0)
+            if (key >= 0 && key <= GLFW_KEY_LAST)
                 keypressed[key] = 1;
         }else if (action == GLFW_RELEASE) {
-            if (key >= 0)
+            if (key >= 0 && key <= GLFW_KEY_LAST)
                 keypressed[key] = 0;
             switch (key) {
                 case GLFW_KEY_LEFT:
                 {
-                    handler.player->prevBlock();
+                    if (handler.playstate == PLAYING) handler.player->prevBlock();
                     break;
                 }
                 
                 case GLFW_KEY_RIGHT:
                 {
-                    handler.player->nextBlock();
+                    if (handler.playstate == PLAYING) handler.player->nextBlock();
                     break;
                 }
                 
@@ -171,22 +180,27 @@ namespace mineworld {
                 
                 case GLFW_KEY_ENTER:
                 {
-                    gterminal.execute();
+                    if (handler.playstate == TYPING) gterminal.execute();
                     break;
                 }
                 
                 case GLFW_KEY_BACKSPACE:
                 {
-                    gterminal.del();
+                    if (handler.playstate == TYPING) gterminal.del();
                     break;
                 }
                     
                 case GLFW_KEY_F2:
                 {
                     time_t abstime = time(0);
-                    tm * ltime = localtime(&abstime);
+                    tm ltime{};
+#ifdef _WIN32
+                    localtime_s(&ltime, &abstime);
+#else
+                    localtime_r(&abstime, &ltime);
+#endif
                     char buffer[128];
-                    sprintf(buffer, "%d-%d-%d_%d.%d.%d.bmp", ltime->tm_year + 1900, ltime->tm_mon + 1, ltime->tm_mday, ltime->tm_hour, ltime->tm_min, ltime->tm_sec);
+                    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H.%M.%S.bmp", &ltime);
                     SOIL_save_screenshot(buffer, SOIL_SAVE_TYPE_BMP, 0, 0, setting.FRAME_BUFFER_WIDTH, setting.FRAME_BUFFER_HEIGHT);
                     std::cout << "screenshots saved as " << buffer << std::endl;
                     break;
@@ -198,19 +212,10 @@ namespace mineworld {
         } /* end if */
     } /* KeyCallBack */
     
-    void CharCallBack(GLFWwindow * window, unsigned int c) {
+    void CharCallBack(GLFWwindow *, unsigned int c) {
         gterminal.inputc(c);
     }
     
-//    void scroll_callback(GLFWwindow * window, double x, double y) {
-//        handler.state.scrollY += y;
-//        if (handler.state.scrollY >= handler.state.scrollSpeed) {
-//            mineworld2::gplayer.nextBlock();
-//            handler.state.scrollY = -handler.state.scrollSpeed;
-//        }else if (handler.state.scrollY <= -handler.state.scrollSpeed) {
-//            mineworld2::gplayer.prevBlock();
-//            handler.state.scrollY = handler.state.scrollSpeed;
-//        }
-//    }
+
 
 }

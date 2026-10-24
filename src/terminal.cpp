@@ -1,221 +1,168 @@
 #include "terminal.hpp"
 #include "texture.hpp"
-#include <cmath>
+#include "handler.hpp"
+#include "block.hpp"
+#include "cell.hpp"
+#include <algorithm>
+#include <sstream>
+
 namespace mineworld {
-    
-    font_loc_t getFontLoc(char c) { // 16 * 8
-        int x = c & 0xF;
-        int y = (c - 32) >> 4;
-        return font_loc_t(x, y);
-    }
-    
-    rect2D createCharRect(const font_loc_t & fl) {
+    font_loc_t getFontLoc(char c) { return {c & 15, (c-32) >> 4}; }
+    rect2D createCharRect(const font_loc_t & p) {
         rect2D r;
-        r.setuv((float)fl.x / 16.0f, (float)fl.y / 8.0f, 0.0625f, 0.125f);
+        r.setuv(p.x/16.0f, p.y/8.0f, 1.0f/16, 1.0f/8);
         return r;
     }
-    
-    void Font::load() {
-        textureID = create2DTexture(config.fontset.texture);
-        std::string vshcode = readFromFile(config.fontset.fontvsh);
-        std::string fshcode = readFromFile(config.fontset.fontfsh);
-        program = compile(vshcode.c_str(), fshcode.c_str());
-        for (int i = 32; i < 128; ++i) {
-            fontset[i - 32] = createCharRect(getFontLoc((char)i));
-        }
+    void Font::release() {
+        if (textureID) glDeleteTextures(1, &textureID);
+        if (program) glDeleteProgram(program);
+        textureID = program = 0;
     }
-    
+    void Font::load() {
+        release();
+        textureID = create2DTexture(config.fontset.texture);
+        auto vsh = readFromFile(config.fontset.fontvsh), fsh = readFromFile(config.fontset.fontfsh);
+        program = compile(vsh.c_str(), fsh.c_str());
+        for (int i = 32; i < 128; ++i) fontset[i-32] = createCharRect(getFontLoc(static_cast<char>(i)));
+    }
     void Screen::init() {
-        fontw = 16;
-        fonth = 32;
-        
-        glbuffer = new glRect2DBuffer();
+        glbuffer = std::make_unique<glRect2DBuffer>();
         font.load();
-        width = setting.WINDOW_WIDTH / fontw;
-        height = setting.WINDOW_HEIGHT / fonth;
-        capcity = width * height;
-        screencontent.assign(capcity, 0);
-        
+        resize();
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
-    
     void Screen::resize() {
-        width = setting.WINDOW_WIDTH / fontw;
-        height = setting.WINDOW_HEIGHT / fonth;
-        capcity = width * height;
-        screencontent.resize(capcity, 0);
+        width = std::max(1, static_cast<int>(setting.WINDOW_WIDTH/fontw));
+        height = std::max(1, static_cast<int>(setting.WINDOW_HEIGHT/fonth));
+        capcity = width*height;
+        screencontent.assign(capcity, 0);
     }
-    
-    void Screen::putc(int pos, char c) {
-        if (pos < screencontent.size())
-            screencontent[pos] = c;
+    void Screen::putc(int position, char c) {
+        if (position >= 0 && position < capcity) screencontent[position] = c;
     }
-    
-    void Screen::print(int start, int size, const char * str) {
-        int len = (capcity - start < size) ? (capcity - start) : size;
-        screencontent.replace(start, len, str);
+    void Screen::print(int start, int size, const char * text) {
+        if (start < 0 || start >= capcity || size <= 0) return;
+        const int count = std::min({size, capcity-start, static_cast<int>(std::strlen(text))});
+        screencontent.replace(static_cast<size_t>(start), static_cast<size_t>(count), text, static_cast<size_t>(count));
     }
-    
-    void Screen::clear() {
-        screencontent.assign(capcity, (char)0);
-    }
-    
+    void Screen::clear() { screencontent.assign(capcity, 0); }
     void Screen::flush() {
-        glbuffer->clear();
-        rect2D * r = new rect2D[capcity];
-        int cnt = 0;
-        for (int yi = 0; yi < height; ++yi) {
-            for (int xi = 0; xi < width; ++xi) {
-                int pos = xi + yi * width;
-                char c = screencontent[pos];
-                if (c >= 32) {
-                    r[cnt] = font.getCharRect(c);
-                    float x = xi * fontw / setting.WINDOW_WIDTH * 2 - 1;
-                    float y = 1 - yi * fonth / setting.WINDOW_HEIGHT * 2;
-                    r[cnt].setposition(x, y, fontw / setting.WINDOW_WIDTH * 2, fonth / setting.WINDOW_HEIGHT * 2);
-                    ++cnt;
-                }
-                
+        if (!glbuffer || setting.WINDOW_WIDTH <= 0 || setting.WINDOW_HEIGHT <= 0) return;
+        std::vector<rect2D> vertices;
+        vertices.reserve(capcity);
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                char c = screencontent[x+y*width];
+                if (c < 32) continue;
+                rect2D r = font.getCharRect(c);
+                r.setposition(x*fontw/setting.WINDOW_WIDTH*2-1, 1-y*fonth/setting.WINDOW_HEIGHT*2,
+                              fontw/setting.WINDOW_WIDTH*2, fonth/setting.WINDOW_HEIGHT*2);
+                vertices.push_back(r);
             }
         }
-        glbuffer->insert(cnt, r);
-        delete [] r;
-    } /* Screen::flush */
-    
+        glbuffer->insert(static_cast<int>(vertices.size()), vertices.data());
+    }
     void Screen::show() {
+        if (!glbuffer) return;
         glUseProgram(font.program);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, font.textureID);
-        
+        glDisable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
         glbuffer->draw();
         glDisable(GL_BLEND);
+        glEnable(GL_DEPTH_TEST);
     }
-    
-    void Terminal::flush() {
-        
-        if (!edited) return;
-        
-        clear();
-        
-        int cnt = (int)lines.size();
-        int len = cnt;
-        int displayLines = 0;
-        while (displayLines < height && cnt > 0) {
-            cnt--;
-            int size = (int)lines[cnt].size();
-            int cline = size / width;
-            if (size % width) {
-                cline++;
-            }
-            displayLines += cline;
-        }
-        if (displayLines > height) {
-            ++cnt;
-        }
-        for (int i = 0; cnt < len; ) {
-            int size = (int)lines[cnt].size();
-            int cline = size / width;
-            if (size % width) {
-                cline++;
-            }
-            print(i * width, size, lines[cnt].c_str());
-            i += cline;
-            ++cnt;
-        }
-        
-        Screen::flush();
-    } /* Terminal::adjust */
-    
-    void Terminal::execute() {
-        const char * s = lines.rbegin()->c_str();
-        std::cout << s << std::endl;
-        glm::ivec3 pos;
-        int B;
-        if (strcmp(s, "> ") == 0) {
-            
-        }else if (sscanf(s, "> set %d %d %d %d", &pos.x, &pos.y, &pos.z, &B)) {
-            if (gblockregister.blockExists(B))
-                gchunk.blockUpdate(pos, B);
-            else
-                println(std::string("error: block not found"));
-        }else if (sscanf(s, "> query %d %d %d", &pos.x, &pos.y, &pos.z)) {
-            int b = gchunk(pos);
-            char buffer[32];
-            sprintf(buffer, "%d", b);
-            println(std::string(buffer));
-        }else if (sscanf(s, "> goto %d %d %d", &pos.x, &pos.y, &pos.z)) {
-            block_loc_t blockloc = pos;
-            handler.player->entitypos.chunkpos = blockloc.chunkpos;
-            handler.player->entitypos.offset = glm::vec3(blockloc.offset) + glm::vec3(0.5, 3, 0.5);
-        }else if (sscanf(s, "> font %d", &B)) {
-            if (B >= 15 && B <= 40) {
-                fontw = B;
-                fonth = B * 2;
-                resize();
-            }else {
-                println(std::string("error: invalid value. (15~40)"));
-            }
-        }else if (sscanf(s, "> blockname %d", &B)) {
-            if (gblockregister.blockExists(B)) {
-                println(gblockregister.getBlockNamebyID(B));
-            }else {
-                println(std::string("error: block not found"));
-            }
-        }else if (strncmp(s, "> blockid ", 10) == 0) {
-            int id = gblockregister.getBlockIDbyName(std::string(&s[10]));
-            if (id < 0)
-                println(std::string("error: block not found"));
-            else {
-                char buffer[32];
-                sprintf(buffer, "%d", id);
-                println(std::string(buffer));
-            }
-        }else if (strncmp(s, "> say ", 6) == 0) {
-            println(std::string(&s[6]));
-        }else if (strcmp(s, "> position") == 0) {
-            entity_pos_t & playerpos = handler.player->entitypos;
-            char buffer[256];
-            sprintf(buffer, "chunk: %d %d %d", playerpos.chunkpos.x, playerpos.chunkpos.y, playerpos.chunkpos.z);
-            println(buffer);
-            sprintf(buffer, "offset: %f %f %f", playerpos.offset.x, playerpos.offset.y, playerpos.offset.z);
-            println(buffer);
-        }else if (strcmp(s, "> lookat") == 0) {
-            hit_pos_t & hitpos = handler.player->blockhitpos;
-            block_loc_t & blockloc = handler.player->hitblock;
-            char buffer[256];
-            sprintf(buffer, "block.chunkpos: %d %d %d", blockloc.chunkpos.x, blockloc.chunkpos.y, blockloc.chunkpos.z);
-            println(buffer);
-            sprintf(buffer, "block.offset: %d %d %d", blockloc.offset.x, blockloc.offset.y, blockloc.offset.z);
-            println(buffer);
-            sprintf(buffer, "hitbox num: %d", hitpos.boxnum);
-            println(buffer);
-            sprintf(buffer, "distance: %f", hitpos.distance);
-            println(buffer);
-            const char * facename[7] = {
-                "none", "left", "right", "top", "bottom", "front", "back"
-            };
-            sprintf(buffer, "face: %s", facename[hitpos.face]);
-            println(buffer);
-        }else if (strcmp(s, "> exit") == 0) {
-            std::cout << "[terminal] exit" << std::endl;
-            exit(0);
-        }else if (strcmp(s, "> clear") == 0) {
-            lines.clear();
-        }else if (strcmp(s, "> blocklist") == 0) {
-            gblockregister.listBlock();
-        }else if (strcmp(s, "> version") == 0) {
-            println(std::string(MW_VERSION));
-        }else if (strcmp(s, "> license") == 0) {
-            println(std::string("Copyright (c) 2019 Chenxi Yu"));
-            println(std::string("Licensed under MIT License"));
-        }else {
-            println(std::string("error: unknown command."));
-        }
-        lines.push_back(std::string("> "));
+    void Terminal::println(const std::string & text) {
+        lines.push_back(text);
+        std::cout << text << std::endl;
+        if (lines.size() > 4096) lines.pop_front();
         edited = true;
-    } /* Terminal::execute */
-    
+    }
+    void Terminal::flush() {
+        if (!edited) return;
+        clear();
+        std::vector<std::string> wrapped;
+        for (const auto & line : lines) {
+            if (line.empty()) wrapped.emplace_back();
+            for (size_t start = 0; start < line.size(); start += static_cast<size_t>(width))
+                wrapped.push_back(line.substr(start, static_cast<size_t>(width)));
+        }
+        const size_t first = wrapped.size() > static_cast<size_t>(height) ? wrapped.size()-height : 0;
+        for (size_t row = first; row < wrapped.size(); ++row)
+            print(static_cast<int>(row-first)*width, static_cast<int>(wrapped[row].size()), wrapped[row].c_str());
+        Screen::flush();
+        edited = false;
+    }
+    void Terminal::execute() {
+        const std::string command = lines.back().substr(2);
+        executeLine(command);
+        if (lines.empty() || lines.back() != "> ") lines.push_back("> ");
+        if (lines.size() > 4096) lines.pop_front();
+        edited = true;
+    }
+    bool Terminal::executeLine(const std::string & command) {
+        std::istringstream input(command);
+        std::string name;
+        if (!(input >> name)) return true;
+        auto end = [&] { input >> std::ws; return input.eof(); };
+        auto invalid = [&] { println("error: invalid command arguments"); return false; };
+        glm::ivec3 position(0);
+        int block = 0;
+        if (name == "set") {
+            if (!(input >> position.x >> position.y >> position.z >> block) || !end()) return invalid();
+            if (!gblockregister.blockExists(block)) { println("error: block not found"); return false; }
+            gchunk.blockUpdate(position,block);
+        } else if (name == "query") {
+            if (!(input >> position.x >> position.y >> position.z) || !end()) return invalid();
+            println(std::to_string(gchunk(position)));
+        } else if (name == "goto") {
+            if (!(input >> position.x >> position.y >> position.z) || !end() || !handler.player) return invalid();
+            block_loc_t location(position);
+            handler.player->entitypos = entity_pos_t(location.chunkpos, glm::vec3(location.offset));
+            handler.player->entitypos += glm::vec3(0.5f,3,0.5f);
+        } else if (name == "font") {
+            if (!(input >> block) || !end() || block < 15 || block > 40) return invalid();
+            fontw = static_cast<float>(block); fonth = fontw*2;
+            resize();
+        } else if (name == "blockname") {
+            if (!(input >> block) || !end()) return invalid();
+            if (!gblockregister.blockExists(block)) { println("error: block not found"); return false; }
+            println(gblockregister.getBlockNamebyID(block));
+        } else if (name == "blockid") {
+            std::string blockname;
+            if (!(input >> blockname) || !end()) return invalid();
+            const int id = gblockregister.getBlockIDbyName(blockname);
+            if (id < 0) { println("error: block not found"); return false; }
+            println(std::to_string(id));
+        } else if (name == "say") {
+            std::string text;
+            std::getline(input >> std::ws, text);
+            println(text);
+        } else {
+            if (!end()) return invalid();
+            if (name == "clear") { lines.clear(); lines.push_back("> "); }
+            else if (name == "exit") { if (handler.window) glfwSetWindowShouldClose(handler.window, GLFW_TRUE); }
+            else if (name == "blocklist") gblockregister.listBlock();
+            else if (name == "version") println(MW_VERSION);
+            else if (name == "license") { println("Copyright (c) 2019 Chenxi Yu"); println("Licensed under MIT License"); }
+            else if (name == "position" && handler.player) {
+                const auto & p = handler.player->entitypos;
+                println("chunk: " + std::to_string(p.chunkpos.x) + " " + std::to_string(p.chunkpos.y) + " " + std::to_string(p.chunkpos.z));
+                println("offset: " + std::to_string(p.offset.x) + " " + std::to_string(p.offset.y) + " " + std::to_string(p.offset.z));
+            } else if (name == "lookat" && handler.player) {
+                const auto & p = handler.player->hitblock;
+                const auto & hit = handler.player->blockhitpos;
+                println("block.chunkpos: " + std::to_string(p.chunkpos.x) + " " + std::to_string(p.chunkpos.y) + " " + std::to_string(p.chunkpos.z));
+                println("block.offset: " + std::to_string(p.offset.x) + " " + std::to_string(p.offset.y) + " " + std::to_string(p.offset.z));
+                println("hitbox num: " + std::to_string(hit.boxnum));
+                println("distance: " + std::to_string(hit.distance));
+                const char * faces[] = {"none","left","right","top","bottom","front","back"};
+                println(std::string("face: ") + faces[hit.face]);
+            } else { println("error: unknown command."); return false; }
+        }
+        return true;
+    }
     Terminal gterminal;
     Board gboard;
 }

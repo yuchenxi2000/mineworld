@@ -6,8 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "handler.hpp"
-#include "cell.hpp"
+#include <cstring>
 
 namespace mineworld {
     class Cell;
@@ -21,10 +20,15 @@ namespace mineworld {
         struct {
             GLuint program;
             GLuint textureID, skyboxID;
-            GLuint blocktextureloc, viewloc, projectionloc, posoffsetloc;
-            GLuint skyboxtextureloc;
-        } Attrib;
+            GLint blocktextureloc, viewloc, projectionloc, posoffsetloc;
+            GLint skyboxtextureloc;
+        } Attrib{};
     public:
+        Shader() = default;
+        Shader(const Shader &) = delete;
+        Shader & operator=(const Shader &) = delete;
+        ~Shader() { release(); }
+        void release();
         void init();
         /*
          * use the shader when render scene
@@ -56,13 +60,18 @@ namespace mineworld {
          */
         struct {
             GLuint program;
-            GLuint projectionloc, skyboxviewloc, skyboxloc;
+            GLint projectionloc, skyboxviewloc, skyboxloc;
             GLuint skyboxID;
             GLuint vao, vbo;
-        } Attrib;
+        } Attrib{};
         void loadSkyBox();
         static const float cube[108];
     public:
+        SkyBoxShader() = default;
+        SkyBoxShader(const SkyBoxShader &) = delete;
+        SkyBoxShader & operator=(const SkyBoxShader &) = delete;
+        ~SkyBoxShader() { release(); }
+        void release();
         void init();
         /*
          * use the shader when render scene
@@ -94,8 +103,8 @@ namespace mineworld {
         struct {
             GLuint program, vao, vbo;
             GLuint textureID;
-            GLuint textureloc;
-        } Attrib;
+            GLint textureloc;
+        } Attrib{};
         
         // vertices
         float cross[30] = {
@@ -106,8 +115,13 @@ namespace mineworld {
             1, 1, 0, 1, 1,
             -1, 1, 0, 0, 1,
         };
-        float ratio = 0.05; // crosshair height divided by window height
+        float ratio = 0.05f; // crosshair height divided by window height
     public:
+        CrosshairShader() = default;
+        CrosshairShader(const CrosshairShader &) = delete;
+        CrosshairShader & operator=(const CrosshairShader &) = delete;
+        ~CrosshairShader() { release(); }
+        void release();
         void init();
         void drawCrosshair() {
             glUseProgram(Attrib.program);
@@ -125,6 +139,7 @@ namespace mineworld {
         // resize when window size changed by user.
         // otherwise, height may not equal to width
         void resize(int width, int height) {
+            if (width <= 0 || height <= 0 || !Attrib.vbo) return;
             float tmp[30];
             memcpy(tmp, cross, sizeof(cross));
             for (int i = 0; i < 6; ++i) {

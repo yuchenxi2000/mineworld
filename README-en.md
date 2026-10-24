@@ -85,7 +85,7 @@ exit         // Exit the game
 
 ### Prerequisites
 
-- CMake 3.12+
+- CMake 3.15+
 - Git (for cloning the repository and submodules)
 - A C++17 compiler
 
@@ -111,42 +111,48 @@ Two options available.
 3. Build:
 
    ```bash
-   mkdir build && cd build
-   cmake .. -G "MinGW Makefiles"
-   cmake --build .
+   cmake -S . -B build_msys2 -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+   cmake --build build_msys2 --parallel
    ```
 
-4. Run (**must be run from the `res/` directory**):
+4. Run:
 
    ```bash
-   cd ../res && ../build/mineworld.exe
+   cd res && ../build_msys2/mineworld.exe
    ```
 
 #### Option 2: Visual Studio Build Tools
 
 1. Install [Visual Studio Build Tools](https://visualstudio.microsoft.com/downloads/) (find "Build Tools for Visual Studio" under "All Downloads"), select "Desktop development with C++".
 
-2. Download [GLEW pre-built binaries](https://glew.sourceforge.net/), extract to `deps/glew-2.3.1/`.
+2. Download the [official GLEW Windows binary package](https://github.com/nigels-com/glew/releases/tag/glew-2.3.1) and extract the complete `glew-2.3.1` directory into `deps/`. Verify that both files exist:
 
-3. Open **PowerShell** (not MSYS2 terminal), build the Release version:
-
-   ```powershell
-   mkdir build_vs; cd build_vs
-   cmake .. -G "Visual Studio 17 2022" -DGLEW_ROOT="<path-to>/deps/glew-2.3.1"
-   cmake --build . --config Release
+   ```text
+   deps/glew-2.3.1/include/GL/glew.h
+   deps/glew-2.3.1/lib/Release/x64/glew32s.lib
    ```
 
-   > Replace `-DGLEW_ROOT` with the actual absolute path to the extracted GLEW.
+   Extract `include/` as well as `bin/` and `lib/`. MSVC cannot use MSYS2 standard-library headers or `.a` libraries.
 
-   > **Note:** Make sure MSYS2 paths (e.g. `C:\msys64\ucrt64\bin`) are NOT in PowerShell's PATH, or MSVC will pick up MinGW headers and fail.
+3. Open **PowerShell** in the repository root and build with the installed Visual Studio generator:
+
+   ```powershell
+   $glewRoot = Join-Path (Get-Location) "deps/glew-2.3.1"
+   cmake -S . -B build_vs -G "Visual Studio 18 2026" "-DGLEW_ROOT=$glewRoot"
+   cmake --build build_vs --config Release --parallel
+   ```
+
+   > Use `"Visual Studio 17 2022"` for VS 2022. Keep MSVC and MSYS2 in separate build directories (`build_vs` and `build_msys2`). Do not reuse one directory with another generator.
+
+   > CMake imports the MSVC GLEW package from `GLEW_ROOT` explicitly. MSYS2 may remain on PATH. Re-run the configuration command to update older generated projects.
+
+   > Static GLEW and the static MSVC runtime are used by default. With `-DGLEW_SHARED=ON`, the GLEW DLL is copied beside built executables automatically.
 
 4. Run:
 
    ```powershell
-   cd ../res; ..\build_vs\Release\mineworld.exe
+   .\build_vs\Release\mineworld.exe
    ```
-
-> Adjust `-G` for different VS versions (e.g. `"Visual Studio 18 2026"` for VS 2026).
 
 ### macOS
 
@@ -168,9 +174,13 @@ make
 cd ../res && ../build/mineworld
 ```
 
+### Regression tests
+
+Configure with `-DBUILD_TESTING=ON`, build, and run `ctest --test-dir build --output-on-failure`. For multi-config generators, also specify the configuration, for example `-C Release`. Default regression tests do not open a window. Enable `-DMINEWORLD_GL_TESTS=ON` for an additional hidden-window OpenGL smoke test, which requires a working desktop graphics context.
+
 ### Important
 
-The executable **must be run from the `res/` directory**, because the program reads `config.json`, textures, shaders, and other resources from the current working directory.
+The executable checks the current directory, nearby `res/` directories, and macOS bundle `Resources/` for `config.json`. Keep the resource directory and its textures and shaders together.
 
 ## Custom Resource Packs
 

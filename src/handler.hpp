@@ -7,7 +7,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "types.hpp"
-#include "cell.hpp"
 #include "entity.hpp"
 #include "timer.hpp"
 
@@ -17,11 +16,11 @@ namespace mineworld {
     
     class Handler {
     public:
-        GLFWwindow * window;
+        GLFWwindow * window = nullptr;
         Timer timer;
         
-        Player * player;
-        PlayingState playstate;
+        Player * player = nullptr;
+        PlayingState playstate = PAUSE;
         
         float horizontalAngle, verticalAngle;
         
@@ -54,8 +53,7 @@ namespace mineworld {
     void KeyCallBack(GLFWwindow * window, int key, int scancode, int action, int mods);
     void CharCallBack(GLFWwindow * window, unsigned int c);
     void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-    //TODO
-//    void scroll_callback(GLFWwindow * window, double x, double y);
+    void resetInput();
     
     extern Handler handler;
 }

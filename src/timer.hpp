@@ -1,30 +1,21 @@
 #ifndef timer_hpp
 #define timer_hpp
-
+#include <algorithm>
 #include <iostream>
-#include <GL/glew.h>
 #include <GLFW/glfw3.h>
-
 namespace mineworld {
     class Timer {
-        double lastCommit, currentTime;
+        double currentTime = 0;
     public:
-        float deltaTime;
-        Timer() {
-            lastCommit = 0.0;
-            currentTime = 0.0;
-        }
+        float deltaTime = 0;
+        void reset() { currentTime = glfwGetTime(); deltaTime = 0; }
         void step() {
-            lastCommit = currentTime;
-            currentTime = glfwGetTime();
-            deltaTime = currentTime - lastCommit;
+            double now = glfwGetTime();
+            deltaTime = static_cast<float>(std::clamp(now-currentTime,0.0,0.1));
+            currentTime = now;
         }
-        void printFPS() {
-            std::cout << "[FPS] " << 1 / deltaTime << '\n';
-        }
+        void printFPS() const { if (deltaTime > 0) std::cout << "[FPS] " << 1/deltaTime << '\n'; }
     };
-    
     extern Timer gtimer;
 }
-
-#endif /* timer_hpp */
+#endif

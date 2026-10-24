@@ -85,7 +85,7 @@ exit // 退出游戏
 
 ### 前置条件
 
-- CMake 3.12+
+- CMake 3.15+
 - Git（用于克隆仓库和子模块）
 - 支持 C++17 的编译器
 
@@ -111,42 +111,48 @@ cd mineworld
 3. 编译：
 
    ```bash
-   mkdir build && cd build
-   cmake .. -G "MinGW Makefiles"
-   cmake --build .
+   cmake -S . -B build_msys2 -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+   cmake --build build_msys2 --parallel
    ```
 
-4. 运行（**必须在 `res/` 目录下运行**）：
+4. 运行：
 
    ```bash
-   cd ../res && ../build/mineworld.exe
+   cd res && ../build_msys2/mineworld.exe
    ```
 
 #### 方式二：Visual Studio Build Tools
 
 1. 安装 [Visual Studio Build Tools](https://visualstudio.microsoft.com/zh-hans/downloads/)（在「所有下载」中找「Visual Studio 生成工具」），勾选「使用 C++ 的桌面开发」
 
-2. 下载 [GLEW 预编译包](https://glew.sourceforge.net/)，解压到 `deps/glew-2.3.1/`
+2. 下载 [GLEW 官方 Windows 预编译包](https://github.com/nigels-com/glew/releases/tag/glew-2.3.1)，将其中的 `glew-2.3.1` 目录完整解压到 `deps/`。确认存在以下文件：
 
-3. 打开 **PowerShell**（非 MSYS2 终端），编译 Release 版本：
-
-   ```powershell
-   mkdir build_vs; cd build_vs
-   cmake .. -G "Visual Studio 17 2022" -DGLEW_ROOT="<path-to>/deps/glew-2.3.1"
-   cmake --build . --config Release
+   ```text
+   deps/glew-2.3.1/include/GL/glew.h
+   deps/glew-2.3.1/lib/Release/x64/glew32s.lib
    ```
 
-   > `-DGLEW_ROOT` 请替换为解压 GLEW 的实际绝对路径。
+   只解压 `bin/` 和 `lib/` 不够；MSVC 不能使用 MSYS2 的标准库头文件或 `.a` 库。
 
-   > **注意：** PowerShell 的 PATH 中不能有 MSYS2 的路径（如 `C:\msys64\ucrt64\bin`），否则 MSVC 会错误引用 MinGW 头文件导致编译失败。
+3. 在项目根目录打开 **PowerShell**，使用本机安装的 Visual Studio 生成器编译 Release：
+
+   ```powershell
+   $glewRoot = Join-Path (Get-Location) "deps/glew-2.3.1"
+   cmake -S . -B build_vs -G "Visual Studio 18 2026" "-DGLEW_ROOT=$glewRoot"
+   cmake --build build_vs --config Release --parallel
+   ```
+
+   > VS 2022 请将生成器改为 `"Visual Studio 17 2022"`。同一个构建目录不能混用不同生成器，MSVC 和 MSYS2 分别使用 `build_vs` 与 `build_msys2`。
+
+   > CMake 会严格使用 `GLEW_ROOT` 中的 MSVC 依赖，避免误选 PATH 中的 MSYS2 GLEW；无需从系统 PATH 删除 MSYS2。旧缓存的项目需先重新执行上面的配置命令。
+
+   > 默认静态链接 GLEW，并统一使用静态 MSVC 运行库。设置 `-DGLEW_SHARED=ON` 时改用 DLL，构建后会自动将 `glew32.dll` 复制到可执行文件旁。
 
 4. 运行：
 
    ```powershell
-   cd ../res; ..\build_vs\Release\mineworld.exe
+   .\build_vs\Release\mineworld.exe
    ```
-
-> 如果 VS 版本不同，调整 `-G` 参数（如 VS 2026 用 `"Visual Studio 18 2026"`）。
 
 ### macOS
 
@@ -168,9 +174,19 @@ make
 cd ../res && ../build/mineworld
 ```
 
+### 回归测试
+
+在配置 CMake 时加上 `-DBUILD_TESTING=ON`，编译后运行：
+
+```bash
+ctest --test-dir build --output-on-failure
+```
+
+Visual Studio 等多配置生成器需加上 `-C Release`，与编译配置一致。默认回归测试无需打开窗口；额外配置 `-DMINEWORLD_GL_TESTS=ON` 可以启用隐藏窗口的 OpenGL 测试，需要可用的桌面图形环境。
+
 ### 重要提示
 
-可执行文件**必须在 `res/` 目录下运行**，因为程序需要读取当前目录下的 `config.json`、材质包、着色器等资源文件。
+程序优先读取当前目录的 `config.json`，也会在可执行文件附近的 `res/` 目录及 macOS 应用包的 `Resources/` 中寻找资源。保持 `res/` 中的配置、材质和着色器目录完整。
 
 ## 制作自己的材质包
 

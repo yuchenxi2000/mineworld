@@ -1,92 +1,73 @@
 #include "config.hpp"
-#include <fstream>
-#include <rapidjson/document.h>
-#include <rapidjson/filereadstream.h>
+#include "json.hpp"
+#include <cmath>
 Config config;
 Setting setting;
 
-bool is2pow(int x) {
-    return (x & (x - 1)) == 0;
+namespace {
+    bool powerOfTwo(int x) { return x > 0 && (x & (x-1)) == 0; }
+    void require(bool valid, const char * field) {
+        if (!valid) throw std::runtime_error(std::string("invalid configuration value: ") + field);
+    }
 }
-
-bool importSetting() {
-    FILE * fp = fopen("config.json", "r");
-    if (fp == 0) {
-        std::cerr << "[config] config file not found" << std::endl;
-        return false;
-    }
-    char readBuffer[2048];
-    rapidjson::FileReadStream fs(fp, readBuffer, sizeof(readBuffer));
-    rapidjson::Document configFile;
-    configFile.ParseStream(fs);
-    
+bool importSetting(const std::string & path) {
+    using namespace mineworld;
     try {
-        rapidjson::Value & configValue = configFile["config"];
-        config.blockFilePath = configValue["blockFilePath"].GetString();
-        config.fontset.texture = configValue["fontset"]["texture"].GetString();
-        config.fontset.fontvsh = configValue["fontset"]["fontvsh"].GetString();
-        config.fontset.fontfsh = configValue["fontset"]["fontfsh"].GetString();
-        config.TEXTURE_SIZE = configValue["TEXTURE_SIZE"].GetInt();
-        if (config.TEXTURE_SIZE < 16 || !is2pow(config.TEXTURE_SIZE)) {
-            config.TEXTURE_SIZE = 16;
-            std::cerr << "[config] invalid value : texture size, use default 16" << std::endl;
-        }
-        std::cout << "[config] texture size " << config.TEXTURE_SIZE << std::endl;
-        
-        config.ATLAS_SIZE_UPPER_BOUND = configValue["ATLAS_SIZE_UPPER_BOUND"].GetInt();
-        if (config.ATLAS_SIZE_UPPER_BOUND < config.TEXTURE_SIZE || \
-            !is2pow(config.ATLAS_SIZE_UPPER_BOUND)) {
-            config.ATLAS_SIZE_UPPER_BOUND = 1024;
-            std::cerr << "[config] invalid value : atlas size upper bound, use default 1024" << std::endl;
-        }
-
-        config.blockshader.fsh = configValue["blockshader"]["fsh"].GetString();
-        config.blockshader.vsh = configValue["blockshader"]["vsh"].GetString();
-        config.skybox.skyboxfsh = configValue["skybox"]["skyboxfsh"].GetString();
-        config.skybox.skyboxvsh = configValue["skybox"]["skyboxvsh"].GetString();
-        config.skybox.faces[0] = configValue["skybox"]["right"].GetString();
-        config.skybox.faces[1] = configValue["skybox"]["left"].GetString();
-        config.skybox.faces[2] = configValue["skybox"]["top"].GetString();
-        config.skybox.faces[3] = configValue["skybox"]["bottom"].GetString();
-        config.skybox.faces[4] = configValue["skybox"]["back"].GetString();
-        config.skybox.faces[5] = configValue["skybox"]["front"].GetString();
-        config.crosshair.crossvsh = configValue["crosshair"]["crossvsh"].GetString();
-        config.crosshair.crossfsh = configValue["crosshair"]["crossfsh"].GetString();
-        config.crosshair.texturePath = configValue["crosshair"]["texturePath"].GetString();
-        
-        config.VISIBLE_DISTANCE = configValue["VISIBLE_DISTANCE"].GetInt();
-        config.CHUNK_CACHE_DISTANCE = configValue["CHUNK_CACHE_DISTANCE"].GetInt();
-        
-        rapidjson::Value & settingValue = configFile["setting"];
-        setting.SHOW_FPS = settingValue["SHOW_FPS"].GetBool();
-        setting.INVERT_Y_AXIS = settingValue["INVERT_Y_AXIS"].GetBool();
-        setting.VERTICAL_SYNC = settingValue["VERTICAL_SYNC"].GetBool();
-        
-        //screen width
-        setting.WINDOW_WIDTH = settingValue["WINDOW_WIDTH"].GetInt();
-        setting.CENTER_WIDTH = setting.WINDOW_WIDTH / 2;
-        
-        //screen height
-        setting.WINDOW_HEIGHT = settingValue["WINDOW_HEIGHT"].GetInt();
-        setting.CENTER_HEIGHT = setting.WINDOW_HEIGHT / 2;
-        
-        setting.walkSpeed = settingValue["walkSpeed"].GetFloat();
-        setting.mouseSpeed = settingValue["mouseSpeed"].GetFloat();
-        
-        setting.username = settingValue["username"].GetString();
-        
-        setting.FOV = settingValue["FOV"].GetFloat();
-        
-        setting.initialPos.x = settingValue["initialPos"]["x"].GetInt();
-        setting.initialPos.y = settingValue["initialPos"]["y"].GetInt();
-        setting.initialPos.z = settingValue["initialPos"]["z"].GetInt();
-        
-        fclose(fp);
-    } catch (...) {
-        fclose(fp);
-        std::cerr << "[config] not a correct format" << std::endl;
+        auto document = readJson(path);
+        const auto & c = jsonMember(document, "config");
+        const auto & s = jsonMember(document, "setting");
+        Config nextConfig{};
+        Setting nextSetting{};
+        nextConfig.blockFilePath = jsonString(c, "blockFilePath");
+        const auto & fonts = jsonMember(c, "fontset");
+        nextConfig.fontset.texture = jsonString(fonts, "texture");
+        nextConfig.fontset.fontvsh = jsonString(fonts, "fontvsh");
+        nextConfig.fontset.fontfsh = jsonString(fonts, "fontfsh");
+        nextConfig.TEXTURE_SIZE = jsonInt(c, "TEXTURE_SIZE");
+        nextConfig.ATLAS_SIZE_UPPER_BOUND = jsonInt(c, "ATLAS_SIZE_UPPER_BOUND");
+        require(nextConfig.TEXTURE_SIZE >= 16 && powerOfTwo(nextConfig.TEXTURE_SIZE), "TEXTURE_SIZE");
+        require(nextConfig.ATLAS_SIZE_UPPER_BOUND >= nextConfig.TEXTURE_SIZE &&
+                powerOfTwo(nextConfig.ATLAS_SIZE_UPPER_BOUND), "ATLAS_SIZE_UPPER_BOUND");
+        const auto & blocks = jsonMember(c, "blockshader");
+        nextConfig.blockshader.fsh = jsonString(blocks, "fsh");
+        nextConfig.blockshader.vsh = jsonString(blocks, "vsh");
+        const auto & sky = jsonMember(c, "skybox");
+        nextConfig.skybox.skyboxfsh = jsonString(sky, "skyboxfsh");
+        nextConfig.skybox.skyboxvsh = jsonString(sky, "skyboxvsh");
+        const char * faces[] = {"right","left","top","bottom","back","front"};
+        for (int i = 0; i < 6; ++i) nextConfig.skybox.faces[i] = jsonString(sky, faces[i]);
+        const auto & cross = jsonMember(c, "crosshair");
+        nextConfig.crosshair.crossvsh = jsonString(cross, "crossvsh");
+        nextConfig.crosshair.crossfsh = jsonString(cross, "crossfsh");
+        nextConfig.crosshair.texturePath = jsonString(cross, "texturePath");
+        nextConfig.VISIBLE_DISTANCE = jsonInt(c, "VISIBLE_DISTANCE");
+        nextConfig.CHUNK_CACHE_DISTANCE = jsonInt(c, "CHUNK_CACHE_DISTANCE");
+        require(nextConfig.VISIBLE_DISTANCE >= 0 && nextConfig.VISIBLE_DISTANCE <= 64, "VISIBLE_DISTANCE (0..64)");
+        require(nextConfig.CHUNK_CACHE_DISTANCE >= nextConfig.VISIBLE_DISTANCE &&
+                nextConfig.CHUNK_CACHE_DISTANCE <= 128, "CHUNK_CACHE_DISTANCE");
+        nextSetting.SHOW_FPS = jsonBool(s, "SHOW_FPS");
+        nextSetting.INVERT_Y_AXIS = jsonBool(s, "INVERT_Y_AXIS");
+        nextSetting.VERTICAL_SYNC = jsonBool(s, "VERTICAL_SYNC");
+        nextSetting.WINDOW_WIDTH = jsonInt(s, "WINDOW_WIDTH");
+        nextSetting.WINDOW_HEIGHT = jsonInt(s, "WINDOW_HEIGHT");
+        require(nextSetting.WINDOW_WIDTH > 0 && nextSetting.WINDOW_WIDTH <= 16384, "WINDOW_WIDTH");
+        require(nextSetting.WINDOW_HEIGHT > 0 && nextSetting.WINDOW_HEIGHT <= 16384, "WINDOW_HEIGHT");
+        nextSetting.CENTER_WIDTH = nextSetting.WINDOW_WIDTH / 2;
+        nextSetting.CENTER_HEIGHT = nextSetting.WINDOW_HEIGHT / 2;
+        nextSetting.walkSpeed = jsonFloat(s, "walkSpeed");
+        nextSetting.mouseSpeed = jsonFloat(s, "mouseSpeed");
+        require(std::isfinite(nextSetting.walkSpeed) && nextSetting.walkSpeed > 0, "walkSpeed");
+        require(std::isfinite(nextSetting.mouseSpeed) && nextSetting.mouseSpeed > 0, "mouseSpeed");
+        nextSetting.username = jsonString(s, "username");
+        nextSetting.FOV = jsonFloat(s, "FOV");
+        require(std::isfinite(nextSetting.FOV) && nextSetting.FOV > 0 && nextSetting.FOV < 180, "FOV");
+        const auto & p = jsonMember(s, "initialPos");
+        nextSetting.initialPos = {jsonInt(p,"x"), jsonInt(p,"y"), jsonInt(p,"z")};
+        config = std::move(nextConfig);
+        setting = std::move(nextSetting);
+        return true;
+    } catch (const std::exception & error) {
+        std::cerr << "[config] " << error.what() << std::endl;
         return false;
     }
-    
-    return true;
 }

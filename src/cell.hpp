@@ -1,104 +1,55 @@
 #ifndef cell_hpp
 #define cell_hpp
+#include <memory>
+#include "mesh.hpp"
+#include "util.hpp"
 
-#include <iostream>
-#include <unordered_set>
-#include "types.hpp"
-#include "shader.hpp"
-#include "shape.hpp"
-#include "block.hpp"
-#include "handler.hpp"
-#include "worker.hpp"
 namespace mineworld {
-    
-    /*
-     * an area of size (16, 16, 16)
-     */
+    class Chunk;
     class Cell {
+        friend class Chunk;
+        std::array<int, CELL_V> blocks{};
+        std::uint64_t generation;
+        std::uint64_t revision = 0;
+        bool meshPending = false;
     public:
-        glRectBuffer glbuffer; // vertex buffer
-        int blockbuffer[16 * 16 * 16];
-        int nearblock[6][16][16];
-        std::vector<rect> * vertexarray;
-        glm::ivec3 posoffset; // the coord of block at (0, 0, 0)
-        bool GPU;
-        bool rebuild;
-        
-        Cell() : glbuffer(), posoffset(), GPU(false), rebuild(false) {}
-        Cell(const glm::ivec3 & v) : glbuffer(), posoffset(v), GPU(false), rebuild(false) {}
-        
-        void setoffset(const glm::ivec3 & v) {
-            posoffset = v;
-        }
-        void vertexToGPU();
-        void blockUpdate(const glm::ivec3 & pos, int block);
-        void clear();
-        int operator () (int x, int y, int z) {
-            return blockbuffer[x + (z << 4) + (y << 8)];
-        }
-        int operator () (const glm::ivec3 & p) {
-            return blockbuffer[p.x + (p.z << 4) + (p.y << 8)];
-        }
-        int operator () (int ipos) {
-            return blockbuffer[ipos];
-        }
-        int upper(const glm::ivec3 & p) {
-            if (p.y < 15) return blockbuffer[p.x + (p.z << 4) + (p.y << 8) + 256];
-            else return nearblock[0][p.x][p.z];
-        }
-        int bottom(const glm::ivec3 & p) {
-            if (p.y > 0) return blockbuffer[p.x + (p.z << 4) + (p.y << 8) - 256];
-            else return nearblock[1][p.x][p.z];
-        }
-        int left(const glm::ivec3 & p) {
-            if (p.x < 15) return blockbuffer[p.x + (p.z << 4) + (p.y << 8) + 1];
-            else return nearblock[2][p.y][p.z];
-        }
-        int right(const glm::ivec3 & p) {
-            if (p.x > 0) return blockbuffer[p.x + (p.z << 4) + (p.y << 8) - 1];
-            else return nearblock[3][p.y][p.z];
-        }
-        int front(const glm::ivec3 & p) {
-            if (p.z < 15) return blockbuffer[p.x + (p.z << 4) + (p.y << 8) + 16];
-            else return nearblock[4][p.x][p.y];
-        }
-        int back(const glm::ivec3 & p) {
-            if (p.z > 0) return blockbuffer[p.x + (p.z << 4) + (p.y << 8) - 16];
-            else return nearblock[5][p.x][p.y];
+        glRectBuffer glbuffer;
+        const glm::ivec3 posoffset;
+        Cell(const glm::ivec3 & position, std::uint64_t generation)
+            : generation(generation), posoffset(position) {}
+        int operator()(const glm::ivec3 & p) const { return blocks[p.x + 16*p.z + 256*p.y]; }
+        void vertexToGPU(const std::vector<rect> & vertices) {
+            glbuffer.insert(static_cast<int>(vertices.size()), vertices.data());
         }
     };
-    
-    /*
-     * manage chunk
-     * load / remove chunk
-     */
     class Chunk {
+        std::unordered_map<glm::ivec3, std::unique_ptr<Cell>, hash_glm_ivec3> chunkmap;
+        glm::ivec3 currentchunk{0x7fffffff};
+        void queueMesh(Cell & cell, bool priority);
+        void updateCell(Cell & cell);
+        void invalidateNeighbors(const glm::ivec3 & position);
     public:
-        std::unordered_map<glm::ivec3, Cell *, hash_glm_ivec3> chunkmap;
-        std::unordered_set<glm::ivec3, hash_glm_ivec3> processingchunks;
-        std::list<Cell *> free_list;
         static const int CELL_PER_CHUNK = 8;
-        glm::ivec3 currentchunk;
-    public:
-        Chunk() : currentchunk(0x7fffffff, 0x7fffffff, 0x7fffffff) {}
+        ~Chunk() { clear(); }
         void load();
-        void loadCells(glm::ivec3 & p);
-        
-        void updateCell(Cell * cell);
-        
-        // update block at pos
-        void blockUpdate(const glm::ivec3 & pos, int block);
-        void blockUpdate(const block_loc_t & pos, int block);
-        
-        // query block at position (x, y, z)
-        int operator () (int x, int y, int z) {
-            return (*this)(glm::ivec3(x, y, z));
+        void loadCells(const glm::ivec3 & position);
+        MeshSnapshot snapshot(const Cell & cell) const;
+        void applyResult(MeshResult result);
+        void clear();
+        const Cell * findCell(const glm::ivec3 & position) const {
+            auto found = chunkmap.find(position);
+            return found == chunkmap.end() ? nullptr : found->second.get();
         }
-        int operator () (const glm::ivec3 & pos);
-        int operator () (const block_loc_t & pos);
+        bool hasPendingMeshes() const {
+            for (const auto & entry : chunkmap) if (entry.second->meshPending) return true;
+            return false;
+        }
+        void blockUpdate(const glm::ivec3 & position, int block);
+        void blockUpdate(const block_loc_t & position, int block);
+        int operator()(int x, int y, int z) const { return (*this)(glm::ivec3(x, y, z)); }
+        int operator()(const glm::ivec3 & position) const { return (*this)(block_loc_t(position)); }
+        int operator()(const block_loc_t & position) const;
     };
-    
     extern Chunk gchunk;
 }
-
-#endif /* cell_hpp */
+#endif

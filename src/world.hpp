@@ -3,31 +3,20 @@
 
 #include <iostream>
 #include "util.hpp"
-#include "block.hpp"
+#include <array>
+#include "types.hpp"
 namespace mineworld {
     class WorldGenerator {
         struct {
-            int grass;
+            int grass = 0;
         } blockID;
     public:
         void init();
-        void generateWorld(const glm::ivec3 & chunkpos, Cell * cell);
+        int blockAt(const glm::ivec3 & position) const;
+        void generateWorld(const glm::ivec3 & chunkpos, std::array<int, CELL_V> & blocks) const;
     };
     extern WorldGenerator gworldgenerator;
 }
-/*
-namespace mineworld {
-    class WorldGenerator2 {
-        struct {
-            int grass, log, leave;
-        } blockID;
-    public:
-        void init();
-        void generateTree(int * blocks, const glm::ivec3 & pos);
-        void generateWorld(const glm::ivec3 & chunkpos, Cell * cell);
-    };
-    extern WorldGenerator2 gworldgenerator2;
-}
- */
+
 
 #endif /* world_hpp */

@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "image.hpp"
+#include <unordered_map>
 
 namespace mineworld {
     /*
@@ -14,7 +15,7 @@ namespace mineworld {
     struct texture_loc_t {
         int x, y;
         GLuint TexID;
-        texture_loc_t() {}
+        texture_loc_t() : x(0), y(0), TexID(0) {}
         texture_loc_t(int x, int y, GLuint id) : x(x), y(y), TexID(id) {}
     };
     
@@ -31,15 +32,25 @@ namespace mineworld {
      */
     class TextureManager {
     private:
-        int CAPCITY_WIDTH, CAPCITY_HEIGHT;
+        int CAPCITY_WIDTH = 0, CAPCITY_HEIGHT = 0;
         Image texture_image;
-        int next_w, next_h;
-        GLuint textureID;
+        int next_w = 0, next_h = 0;
+        GLuint textureID = 0;
+        std::unordered_map<std::string, texture_loc_t> locations;
     public:
-        int MAX_TEXTURE_SIZE;
+        int MAX_TEXTURE_SIZE = 0;
+        TextureManager() = default;
+        TextureManager(const TextureManager &) = delete;
+        TextureManager & operator=(const TextureManager &) = delete;
         void init();
         ~TextureManager() {
-            glDeleteTextures(1, &textureID);
+            release();
+        }
+        void release() {
+            if (textureID) glDeleteTextures(1, &textureID);
+            textureID = 0;
+            texture_image.clear();
+            locations.clear();
         }
         
         GLuint getTextureID() {

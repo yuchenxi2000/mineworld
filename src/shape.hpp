@@ -15,19 +15,21 @@ namespace mineworld {
      * vertex, rectangle in 3 dimension
      */
     struct vertex {
-        glm::vec3 position;
-        glm::vec2 uv;
-        glm::vec3 normal;
+        glm::vec3 position{0};
+        glm::vec2 uv{0};
+        glm::vec3 normal{0};
         
         vertex() {}
         vertex(const float * v) {
-            memcpy(this, v, sizeof(vertex));
+            position = {v[0],v[1],v[2]};
+            uv = {v[3],v[4]};
+            normal = {v[5],v[6],v[7]};
         }
         vertex & shift(const glm::ivec3 & v) {
             position += v;
             return *this;
         }
-        vertex & setuv(int u, int v) {
+        vertex & setuv(float u, float v) {
             uv[0] = u; uv[1] = v;
             return *this;
         }
@@ -38,7 +40,7 @@ namespace mineworld {
         
         rect() {}
         rect(const float * v) {
-            memcpy(this, v, sizeof(rect));
+            for (int i = 0; i < 4; ++i) this->v[i] = vertex(v + 8*i);
         }
         rect & shift(const glm::ivec3 & offset) {
             v[0].position += offset;
@@ -66,8 +68,8 @@ namespace mineworld {
      * vertex, rectangle in 2 dimension
      */
     struct vertex2D {
-        glm::vec2 position;
-        glm::vec2 uv;
+        glm::vec2 position{0};
+        glm::vec2 uv{0};
         vertex2D & shift(float x, float y) {
             position[0] += x;
             position[1] += y;
@@ -79,7 +81,10 @@ namespace mineworld {
         vertex2D v[4];
         rect2D() {}
         rect2D(const float * f) {
-            memcpy(this, f, sizeof(rect2D));
+            for (int i = 0; i < 4; ++i) {
+                v[i].position = {f[4*i], f[4*i+1]};
+                v[i].uv = {f[4*i+2], f[4*i+3]};
+            }
         }
         void setposition(float x, float y, float width, float height) {
             v[0].position[0] = x;

@@ -6,13 +6,11 @@
 #include "util.hpp"
 #include "types.hpp"
 #include "hitbox.hpp"
-#include "cell.hpp"
 
 namespace mineworld {
     
     class Entity {
     public:
-//        std::vector<CollisionBox> vcollision;
         
         glm::vec3 lookdirection;
         entity_pos_t entitypos;
@@ -30,6 +28,7 @@ namespace mineworld {
     public:
         Entity();
         Entity(const entity_pos_t & epos);
+        virtual ~Entity() = default;
         
         void updateLookAt();
     };

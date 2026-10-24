@@ -2,7 +2,28 @@
 #include "config.hpp"
 #include "texture.hpp"
 #include "util.hpp"
+#include "handler.hpp"
+#include "cell.hpp"
+#include <stdexcept>
 namespace mineworld {
+    void Shader::release() {
+        if (Attrib.program) glDeleteProgram(Attrib.program);
+        Attrib = {};
+    }
+    void SkyBoxShader::release() {
+        if (Attrib.program) glDeleteProgram(Attrib.program);
+        if (Attrib.skyboxID) glDeleteTextures(1, &Attrib.skyboxID);
+        if (Attrib.vbo) glDeleteBuffers(1, &Attrib.vbo);
+        if (Attrib.vao) glDeleteVertexArrays(1, &Attrib.vao);
+        Attrib = {};
+    }
+    void CrosshairShader::release() {
+        if (Attrib.program) glDeleteProgram(Attrib.program);
+        if (Attrib.textureID) glDeleteTextures(1, &Attrib.textureID);
+        if (Attrib.vbo) glDeleteBuffers(1, &Attrib.vbo);
+        if (Attrib.vao) glDeleteVertexArrays(1, &Attrib.vao);
+        Attrib = {};
+    }
     
     static glm::vec3 delta[8] = {
         {0, 0, 0},
@@ -86,13 +107,14 @@ namespace mineworld {
         for (int i = 0; i < 6; i++) {
             Image image(config.skybox.faces[i].c_str(), 3);
             if (image.isNull()) {
-                std::cout << "[skybox] cannot open " << config.skybox.faces[i] << std::endl;
-                exit(-1);
+                throw std::runtime_error("cannot open skybox image: " + config.skybox.faces[i]);
             }
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             glTexImage2D(
                          GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
                          0, GL_RGB, image.width, image.height, 0, GL_RGB, GL_UNSIGNED_BYTE, image
                          );
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         }
     }
     

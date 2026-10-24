@@ -44,7 +44,7 @@ struct Setting {
     int CENTER_WIDTH = 400;
     int CENTER_HEIGHT = 300;
     
-    int FRAME_BUFFER_WIDTH, FRAME_BUFFER_HEIGHT;
+    int FRAME_BUFFER_WIDTH = 800, FRAME_BUFFER_HEIGHT = 600;
     
     float mouseSpeed = 0.005f;
     float walkSpeed = 3.0f;
@@ -53,7 +53,7 @@ struct Setting {
     
     std::string username;
     
-    glm::ivec3 initialPos;
+    glm::ivec3 initialPos{0};
 };
 
 extern Config config;
@@ -62,6 +62,6 @@ extern Setting setting;
 /*
  * read from "config.json"
  */
-bool importSetting();
+bool importSetting(const std::string & path = "config.json");
 
 #endif /* config_hpp */

@@ -3,12 +3,7 @@ namespace mineworld {
     
     Image createMissingTexture() {
         Image image;
-        image.width = config.TEXTURE_SIZE;
-        image.height = config.TEXTURE_SIZE;
-        image.channel = 4;
-        int len = image.width * image.height * image.channel;
-        image.data = new unsigned char[len];
-        memset(image.data, 0, len);
+        image.blankImage(config.TEXTURE_SIZE, config.TEXTURE_SIZE, 4);
         
         for (int i = 0; i < config.TEXTURE_SIZE / 2; ++i) {
             for (int j = 0; j < config.TEXTURE_SIZE / 2; ++j) {
@@ -48,7 +43,7 @@ namespace mineworld {
     GLuint create2DTexture(const std::string & path) {
         Image img(path.c_str(), 4);
         if (img.isNull()) {
-            std::cerr << "[texture] failed to load texture from " << path << std::endl;
+            throw std::runtime_error("failed to load texture: " + path);
         }
         GLuint textureID;
         glGenTextures(1, &textureID);
@@ -66,6 +61,7 @@ namespace mineworld {
     }
     
     void TextureManager::init() {
+        release();
         next_h = 0;
         next_w = 0;
         
@@ -78,8 +74,7 @@ namespace mineworld {
         if (MAX_TEXTURE_SIZE > config.ATLAS_SIZE_UPPER_BOUND) MAX_TEXTURE_SIZE = config.ATLAS_SIZE_UPPER_BOUND;
         
         if (config.TEXTURE_SIZE > MAX_TEXTURE_SIZE) {
-            std::cerr << "[texture] error : texture size larger than atlas size. terminate" << std::endl;
-            exit(EXIT_FAILURE);
+            throw std::runtime_error("texture size larger than atlas size");
         }
         
         std::cout << "[texture] current atlas size " << MAX_TEXTURE_SIZE << std::endl;
@@ -98,13 +93,16 @@ namespace mineworld {
             next_w = 0;
             ++next_h;
         }
-        if (next_h >= CAPCITY_HEIGHT) {
-            std::cerr << "[texture] atlas size is too small. texture not loaded: missing texture" << std::endl;
-        }
         
     }
     
     texture_loc_t TextureManager::loadTexture(const std::string & imagePath) {
+        auto existing = locations.find(imagePath);
+        if (existing != locations.end()) return existing->second;
+        if (next_h >= CAPCITY_HEIGHT) {
+            std::cerr << "[texture] atlas is full: " << imagePath << std::endl;
+            return texture_loc_t(0, 0, 0);
+        }
         Image image(imagePath.c_str(), 4);
         if (image.isNull()) {
             std::cerr << "[texture] failed to load image from " << imagePath << std::endl;
@@ -116,18 +114,17 @@ namespace mineworld {
             int h = config.TEXTURE_SIZE * next_h;
             int w = config.TEXTURE_SIZE * next_w;
             
-            texture_image.copy(image, w, h);
+            if (!texture_image.copy(image, w, h))
+                throw std::runtime_error("failed to copy texture into atlas: " + imagePath);
             
             ++next_w;
             if (next_w >= CAPCITY_WIDTH) {
                 next_w = 0;
                 ++next_h;
             }
-            if (next_h >= CAPCITY_HEIGHT) {
-                std::cerr << "[texture] atlas size is too small. texture not loaded: " << imagePath << std::endl;
-                return texture_loc_t(0, 0, 0);
-            }
-            return texture_loc_t(w, h, 0);
+            texture_loc_t location(w, h, 0);
+            locations.emplace(imagePath, location);
+            return location;
         }
     }
     
